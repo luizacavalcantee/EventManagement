@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 
+// sobre a classe GerenciadorEventos
+
 GerenciadorEventos::GerenciadorEventos() {
     numEventos = 0;
 }

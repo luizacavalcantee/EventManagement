@@ -1,6 +1,8 @@
 #include <iostream>
 #include "GerenciadorEventos.h"
 
+//main fazendo a chamada do menu e das funcoes do gerenciador de eventos
+
 void exibirMenu() {
     std::cout << "\n=== Sistema de Eventos ===" << std::endl;
     std::cout << "1. Cadastrar evento" << std::endl;

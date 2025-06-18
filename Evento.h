@@ -4,6 +4,8 @@
 #include <string>
 #include "Participante.h"
 
+//sobre classe evento
+
 class Evento {
 private:
     std::string nome;

@@ -4,6 +4,8 @@
 #include <string>
 #include "Evento.h"
 
+//declração da classe GerenciadorEventos
+
 class GerenciadorEventos {
 private:
     Evento* eventos[10];

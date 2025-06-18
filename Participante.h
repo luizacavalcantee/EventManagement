@@ -1,6 +1,8 @@
 #ifndef PARTICIPANTE_H
 #define PARTICIPANTE_H
 
+//declaração da classe Participante
+
 #include <string>
 
 class Participante {

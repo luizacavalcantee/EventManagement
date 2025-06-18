@@ -1,5 +1,7 @@
 #include "Participante.h"
 
+//´sobre a classe Participante
+
 Participante::Participante(std::string n, std::string e, std::string c) {
     nome = n;
     email = e;

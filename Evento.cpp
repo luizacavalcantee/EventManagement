@@ -3,6 +3,8 @@
 #include <fstream>
 #include <ostream>
 
+//sobre a classe Evento
+
 Evento::Evento(std::string n, std::string d, std::string h, std::string l, std::string desc) {
     nome = n;
     data = d;
