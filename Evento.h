@@ -8,6 +8,7 @@
 
 class Evento {
 private:
+    int id;
     std::string nome;
     std::string data;
     std::string hora;
@@ -18,10 +19,12 @@ private:
 
 public:
     Evento(std::string n, std::string d, std::string h, std::string l, std::string desc);
+    Evento(int id, std::string n, std::string d, std::string h, std::string l, std::string desc);
     ~Evento();
 
     void adicionarParticipante(std::string nome, std::string email, std::string contato = "");
     
+    int getId() const;
     std::string getNome() const;
     std::string getData() const;
     std::string getHora() const;
@@ -30,6 +33,7 @@ public:
     int getNumParticipantes() const;
     Participante* getParticipante(int i) const;
 
+    void setId(int id);
     void atualizarEvento(std::string n, std::string d, std::string h, std::string l, std::string desc);
     void salvarEvento(std::ofstream &arquivo);
 };

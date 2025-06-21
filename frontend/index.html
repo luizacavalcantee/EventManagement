@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscrições em Eventos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calendar-check me-2"></i>
+                Inscrições em Eventos
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="admin.html">
+                    <i class="fas fa-cog me-1"></i>Administração
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section bg-gradient text-white text-center py-5">
+        <div class="container">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-calendar-alt me-3"></i>
+                Eventos Disponíveis
+            </h1>
+            <p class="lead mb-4">Encontre e inscreva-se nos melhores eventos da sua região!</p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-0" id="searchInput" 
+                               placeholder="Buscar eventos por nome, local ou descrição...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <label for="filterStatus" class="form-label">Status</label>
+                                <select class="form-select" id="filterStatus">
+                                    <option value="">Todos os eventos</option>
+                                    <option value="hoje">Eventos de hoje</option>
+                                    <option value="proximos">Eventos próximos</option>
+                                    <option value="futuros">Eventos futuros</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filterLocal" class="form-label">Local</label>
+                                <select class="form-select" id="filterLocal">
+                                    <option value="">Todos os locais</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="sortBy" class="form-label">Ordenar por</label>
+                                <select class="form-select" id="sortBy">
+                                    <option value="data">Data</option>
+                                    <option value="nome">Nome</option>
+                                    <option value="local">Local</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button class="btn btn-outline-primary" onclick="limparFiltros()">
+                                        <i class="fas fa-times me-1"></i>Limpar Filtros
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Eventos -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Eventos Disponíveis
+                        </h5>
+                        <div>
+                            <span class="badge bg-primary me-2" id="totalEventos">0</span>
+                            <button class="btn btn-sm btn-outline-success" onclick="carregarEventos()">
+                                <i class="fas fa-sync-alt me-1"></i>Atualizar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="eventosList" class="row">
+                            <!-- Eventos serão carregados aqui -->
+                        </div>
+                        <div id="loadingEventos" class="text-center py-4" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Carregando eventos...</p>
+                        </div>
+                        <div id="noEventos" class="text-center py-4" style="display: none;">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum evento encontrado</h5>
+                            <p class="text-muted">Não há eventos disponíveis no momento.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Inscrição -->
+    <div class="modal fade" id="inscricaoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus me-2"></i>Inscrever-se no Evento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="eventoInfo" class="mb-4">
+                        <!-- Informações do evento serão carregadas aqui -->
+                    </div>
+                    <form id="inscricaoForm">
+                        <div class="mb-3">
+                            <label for="nomeParticipante" class="form-label">Nome Completo *</label>
+                            <input type="text" class="form-control" id="nomeParticipante" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="emailParticipante" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="emailParticipante" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contatoParticipante" class="form-label">Telefone/WhatsApp</label>
+                            <input type="tel" class="form-control" id="contatoParticipante" 
+                                   placeholder="(11) 99999-9999">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="inscreverParticipante()">
+                        <i class="fas fa-check me-1"></i>Confirmar Inscrição
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js?v=1.1"></script>
+    <script src="js/utils/dateUtils.js"></script>
+    <script src="js/utils/notificationUtils.js"></script>
+    <script src="js/services/apiService.js"></script>
+    <script src="js/components/EventoList.js"></script>
+    <script src="js/inscricoes.js"></script>
+</body>
+</html> 

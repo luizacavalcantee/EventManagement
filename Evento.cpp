@@ -6,6 +6,17 @@
 //sobre a classe Evento
 
 Evento::Evento(std::string n, std::string d, std::string h, std::string l, std::string desc) {
+    id = 0; // Será definido pelo gerenciador
+    nome = n;
+    data = d;
+    hora = h;
+    local = l;
+    descricao = desc;
+    numParticipantes = 0;
+}
+
+Evento::Evento(int id, std::string n, std::string d, std::string h, std::string l, std::string desc) {
+    this->id = id;
     nome = n;
     data = d;
     hora = h;
@@ -28,6 +39,10 @@ void Evento::adicionarParticipante(std::string nome, std::string email, std::str
     } else {
         std::cout << "Evento lotado!" << std::endl;
     }
+}
+
+int Evento::getId() const {
+    return id;
 }
 
 std::string Evento::getNome() const {
@@ -58,6 +73,10 @@ Participante* Evento::getParticipante(int i) const {
     return participantes[i];
 }
 
+void Evento::setId(int id) {
+    this->id = id;
+}
+
 void Evento::atualizarEvento(std::string n, std::string d, std::string h, std::string l, std::string desc) {
     nome = n;
     data = d;
@@ -67,7 +86,7 @@ void Evento::atualizarEvento(std::string n, std::string d, std::string h, std::s
 }
 
 void Evento::salvarEvento(std::ofstream &arquivo) {
-    arquivo << nome.c_str() << "," << data.c_str() << "," << hora.c_str() << "," 
+    arquivo << id << "," << nome.c_str() << "," << data.c_str() << "," << hora.c_str() << "," 
             << local.c_str() << "," << descricao.c_str() << std::endl;
     for (int i = 0; i < numParticipantes; i++) {
         arquivo << "PARTICIPANTE," << participantes[i]->toString().c_str() << std::endl;

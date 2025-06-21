@@ -2,11 +2,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 // sobre a classe GerenciadorEventos
 
 GerenciadorEventos::GerenciadorEventos() {
     numEventos = 0;
+    nextId = 1;
 }
 
 GerenciadorEventos::~GerenciadorEventos() {
@@ -26,7 +30,7 @@ void GerenciadorEventos::cadastrarEvento() {
         std::cout << "Local: "; std::getline(std::cin, local);
         std::cout << "Descricao: "; std::getline(std::cin, descricao);
 
-        eventos[numEventos] = new Evento(nome, data, hora, local, descricao);
+        eventos[numEventos] = new Evento(nextId++, nome, data, hora, local, descricao);
         numEventos++;
         std::cout << "Evento cadastrado com sucesso!" << std::endl;
     } else {
@@ -161,17 +165,21 @@ void GerenciadorEventos::carregarEventosDoArquivo() {
                 eventoAtual->adicionarParticipante(nome, email, contato);
             }
         } else {
+            int id = std::stoi(tipo);
             std::string nome, data, hora, local, descricao;
-            nome = tipo;
+            std::getline(ss, nome, ',');
             std::getline(ss, data, ',');
             std::getline(ss, hora, ',');
             std::getline(ss, local, ',');
             std::getline(ss, descricao, ',');
 
             if (numEventos < 10) {
-                eventos[numEventos] = new Evento(nome, data, hora, local, descricao);
+                eventos[numEventos] = new Evento(id, nome, data, hora, local, descricao);
                 eventoAtual = eventos[numEventos];
                 numEventos++;
+                if (id >= nextId) {
+                    nextId = id + 1;
+                }
             }
         }
     }
@@ -188,6 +196,7 @@ void GerenciadorEventos::listarEventos() {
     std::cout << "\n=== Lista de Eventos ===" << std::endl;
     for (int i = 0; i < numEventos; i++) {
         std::cout << "\nEvento " << (i + 1) << ":" << std::endl;
+        std::cout << "ID: " << eventos[i]->getId() << std::endl;
         std::cout << "Nome: " << eventos[i]->getNome() << std::endl;
         std::cout << "Data: " << eventos[i]->getData() << std::endl;
         std::cout << "Hora: " << eventos[i]->getHora() << std::endl;
@@ -196,4 +205,45 @@ void GerenciadorEventos::listarEventos() {
         std::cout << "Numero de participantes: " << eventos[i]->getNumParticipantes() << std::endl;
         std::cout << "------------------------" << std::endl;
     }
+}
+
+json GerenciadorEventos::gerarRelatorioJson() const {
+    json relatorio;
+    
+    relatorio["totalEventos"] = numEventos;
+    
+    int totalParticipantes = 0;
+    for (int i = 0; i < numEventos; i++) {
+        totalParticipantes += eventos[i]->getNumParticipantes();
+    }
+    relatorio["totalParticipantes"] = totalParticipantes;
+    
+    // Contar eventos por status
+    int eventosHoje = 0;
+    int eventosProximos = 0;
+    int eventosPassados = 0;
+    int eventosFuturos = 0;
+    
+    std::string hoje = "2024-01-01"; // Simplificado para exemplo
+    
+    for (int i = 0; i < numEventos; i++) {
+        if (eventos[i]->getData() == hoje) {
+            eventosHoje++;
+        } else if (eventos[i]->getData() > hoje) {
+            eventosProximos++;
+        } else {
+            eventosPassados++;
+        }
+    }
+    
+    relatorio["eventosPorStatus"] = {
+        {"hoje", eventosHoje},
+        {"proximos", eventosProximos},
+        {"passados", eventosPassados},
+        {"futuros", eventosFuturos}
+    };
+    
+    relatorio["eventosProximos"] = eventosProximos;
+    
+    return relatorio;
 } 
