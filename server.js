@@ -54,12 +54,15 @@ function criarEventosExemplo() {
     });
 }
 
+// Router para API
+const apiRouter = express.Router();
+
 // Rotas da API
-app.get('/eventos', (req, res) => {
+apiRouter.get('/eventos', (req, res) => {
     res.json(eventos);
 });
 
-app.get('/eventos/:id', (req, res) => {
+apiRouter.get('/eventos/:id', (req, res) => {
     const evento = eventos.find(e => e.id == req.params.id);
     if (evento) {
         res.json(evento);
@@ -68,7 +71,7 @@ app.get('/eventos/:id', (req, res) => {
     }
 });
 
-app.post('/eventos', (req, res) => {
+apiRouter.post('/eventos', (req, res) => {
     const novoEvento = {
         id: nextId++,
         nome: req.body.nome || "",
@@ -85,7 +88,7 @@ app.post('/eventos', (req, res) => {
     res.status(201).json(novoEvento);
 });
 
-app.put('/eventos/:id', (req, res) => {
+apiRouter.put('/eventos/:id', (req, res) => {
     const evento = eventos.find(e => e.id == req.params.id);
     if (!evento) {
         return res.status(404).json({ error: "Evento não encontrado" });
@@ -102,7 +105,7 @@ app.put('/eventos/:id', (req, res) => {
     res.json(evento);
 });
 
-app.delete('/eventos/:id', (req, res) => {
+apiRouter.delete('/eventos/:id', (req, res) => {
     const index = eventos.findIndex(e => e.id == req.params.id);
     if (index === -1) {
         return res.status(404).json({ error: "Evento não encontrado" });
@@ -114,12 +117,12 @@ app.delete('/eventos/:id', (req, res) => {
     res.json({ message: "Evento deletado com sucesso" });
 });
 
-app.get('/eventos/:id/participantes', (req, res) => {
+apiRouter.get('/eventos/:id/participantes', (req, res) => {
     const eventoId = parseInt(req.params.id);
     res.json(participantes[eventoId] || []);
 });
 
-app.post('/eventos/:id/participantes', (req, res) => {
+apiRouter.post('/eventos/:id/participantes', (req, res) => {
     const eventoId = parseInt(req.params.id);
     if (!participantes[eventoId]) {
         return res.status(404).json({ error: "Evento não encontrado" });
@@ -142,7 +145,7 @@ app.post('/eventos/:id/participantes', (req, res) => {
     res.status(201).json(novoParticipante);
 });
 
-app.get('/relatorio', (req, res) => {
+apiRouter.get('/relatorio', (req, res) => {
     const hoje = new Date();
     const proximo = new Date(hoje.getTime() + 7 * 24 * 60 * 60 * 1000);
     
@@ -170,9 +173,12 @@ app.get('/relatorio', (req, res) => {
     res.json(relatorio);
 });
 
-app.post('/eventos/salvar', (req, res) => {
+apiRouter.post('/eventos/salvar', (req, res) => {
     res.json({ message: "Eventos salvos com sucesso" });
 });
+
+// Usar o router da API com prefixo /api
+app.use('/api', apiRouter);
 
 app.get('/health', (req, res) => {
     res.json({ status: "ok", message: "Servidor funcionando!" });

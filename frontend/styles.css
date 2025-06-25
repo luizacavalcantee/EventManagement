@@ -709,4 +709,79 @@ body {
         box-shadow: none !important;
         border: 1px solid #dee2e6 !important;
     }
+}
+
+/* Títulos personalizados */
+.hero-section h1 {
+    color: #ff6b35 !important; /* Cor laranja vibrante */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+}
+
+.card-header h5 {
+    color: #8e44ad !important; /* Cor roxa */
+    font-weight: 600;
+}
+
+/* Gradiente personalizado para o título principal */
+.hero-section h1.display-4 {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd23f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+/* Classes específicas para os títulos */
+.titulo-principal {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd23f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    font-weight: 700;
+}
+
+.titulo-lista {
+    color: #8e44ad !important;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.subtitulo-hero {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd23f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    text-shadow: none;
+}
+
+#eventosList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem 0.5rem; /* Espaço entre linhas e colunas */
+}
+
+#eventosList > .col-lg-4 {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 33.3333%;
+    max-width: 33.3333%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 991.98px) {
+    #eventosList > .col-lg-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+@media (max-width: 767.98px) {
+    #eventosList > .col-lg-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
 } 

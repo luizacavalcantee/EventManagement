@@ -264,7 +264,7 @@ class InscricoesApp {
                             </p>
                             <p class="mb-1">
                                 <i class="fas fa-calendar-day me-2 text-muted"></i>
-                                <strong>Data:</strong> ${DateUtils.formatarData(evento.data)}
+                                <strong>Data:</strong> ${DateUtils.formatDate(evento.data)}
                             </p>
                         </div>
                         <div class="col-md-6">

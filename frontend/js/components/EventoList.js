@@ -51,8 +51,13 @@ class EventoList {
     renderizarEventos(eventos, options = {}) {
         this.eventos = eventos || [];
         
-        // Simplificado para sempre renderizar a tabela na área de admin
-        this.renderizarTabela(options);
+        // Verificar se deve renderizar cards ou tabela
+        if (options.modo === 'cards' || options.mostrarAcoes === false) {
+            this.renderizarCards(eventos, options);
+        } else {
+            // Simplificado para sempre renderizar a tabela na área de admin
+            this.renderizarTabela(options);
+        }
     }
 
     /**
@@ -351,6 +356,96 @@ class EventoList {
             console.error('Erro ao salvar eventos:', error);
             NotificationUtils.error('Erro ao salvar eventos. Por favor, tente novamente.');
         }
+    }
+
+    /**
+     * Renderiza os eventos em formato de cards
+     * @param {Array} eventos - Lista de eventos
+     * @param {Object} options - Opções de renderização
+     */
+    renderizarCards(eventos, options = {}) {
+        const container = document.getElementById('eventosList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (eventos.length === 0) {
+            container.innerHTML = this.getEmptyCardsHTML();
+            return;
+        }
+
+        eventos.forEach(evento => {
+            const card = this.criarCardEvento(evento, options);
+            container.appendChild(card);
+        });
+    }
+
+    /**
+     * Cria um card para um evento
+     * @param {Object} evento - Dados do evento
+     * @param {Object} options - Opções de renderização
+     * @returns {HTMLElement} Elemento do card
+     */
+    criarCardEvento(evento, options = {}) {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4 mb-4';
+        
+        const statusClass = this.getStatusBadgeClass(evento.data);
+        const statusText = this.getStatusText(evento.data);
+        
+        col.innerHTML = `
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="card-title mb-0 text-primary">${evento.nome}</h6>
+                        <span class="badge ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p class="card-text text-muted small">
+                            ${evento.descricao || 'Sem descrição disponível'}
+                        </p>
+                    </div>
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <i class="fas fa-calendar-day text-primary mb-1"></i>
+                                <div class="small text-muted">Data</div>
+                                <div class="fw-bold">${DateUtils.formatDate(evento.data)}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <i class="fas fa-clock text-primary mb-1"></i>
+                            <div class="small text-muted">Hora</div>
+                            <div class="fw-bold">${evento.hora || '--:--'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            <span class="small">${evento.local}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="fas fa-users me-1"></i>
+                            ${evento.numParticipantes || 0} inscritos
+                        </div>
+                        ${options.onInscrever ? `
+                            <button class="btn btn-success btn-sm" onclick="window.inscricoesApp.abrirModalInscricao(${JSON.stringify(evento).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-user-plus me-1"></i>Inscrever-se
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        return col;
     }
 }
 
