@@ -1,12 +1,13 @@
 # 🎉 Sistema de Gerenciamento de Eventos
 
-Um sistema completo para gerenciar eventos, participantes e relatórios com interface web moderna.
+Um sistema completo para gerenciar eventos, participantes e relatórios com interface web moderna e backend em C++.
 
 ## 🚀 **Tecnologias**
 
-- **Backend**: Node.js + Express.js
+- **Backend**: C++ puro com Winsock (Windows)
 - **Frontend**: JavaScript vanilla + Bootstrap
 - **Arquitetura**: Modular e responsiva
+- **Persistência**: Arquivo texto (eventos.txt)
 
 ## 📋 **Funcionalidades**
 
@@ -34,31 +35,47 @@ Um sistema completo para gerenciar eventos, participantes e relatórios com inte
 ## 🛠️ **Como Rodar**
 
 ### **Pré-requisitos**
-- Node.js 16.x ou superior
+- Compilador C++ (MinGW, Visual Studio, ou GCC)
 - Navegador web moderno
+- Windows (para Winsock)
 
-### **Instalação**
+### **Instalação e Execução**
 ```bash
-# 1. Instalar dependências
-npm install
+# Opção 1: Script automático (recomendado)
+run_backend.bat
 
-# 2. Iniciar servidor
-npm start
+# Opção 2: Manual
+cd backend
+compile_simple.bat
+simple_cpp_server.exe
 
 # 3. Acessar interface
 # http://localhost:8080/frontend/
 ```
 
-### **Desenvolvimento**
+### **Compilação Manual**
 ```bash
-# Auto-reload para desenvolvimento
-npm run dev
+# Windows com MinGW
+cd backend
+g++ -std=c++17 -o simple_cpp_server.exe simple_cpp_server.cpp -lws2_32
+
+# Linux/macOS (sem Winsock)
+cd backend
+g++ -std=c++17 -o simple_cpp_server simple_cpp_server.cpp
 ```
 
 ## 📁 **Estrutura do Projeto**
 
 ```
 EventManagement/
+├── backend/              # Backend C++ organizado
+│   ├── simple_cpp_server.cpp  # Servidor principal
+│   ├── simple_cpp_server.exe  # Executável
+│   ├── Evento.h/.cpp         # Classe Evento
+│   ├── Participante.h/.cpp   # Classe Participante
+│   ├── GerenciadorEventos.h/.cpp # Gerenciador principal
+│   ├── eventos.txt           # Dados persistentes
+│   └── compile_simple.bat    # Script de compilação
 ├── frontend/              # Interface web
 │   ├── index.html         # Página principal
 │   ├── styles.css         # Estilos
@@ -68,28 +85,22 @@ EventManagement/
 │       ├── services/     # Serviços da API
 │       ├── components/   # Componentes da interface
 │       └── utils/        # Utilitários
-├── server.js             # Servidor Node.js
-├── package.json          # Dependências e scripts
-└── COMO_RODAR.md         # Guia detalhado
+├── run_backend.bat       # Script principal de execução
+└── README.md            # Este arquivo
 ```
 
 ## 🌐 **URLs da API**
 
 | Endpoint | Método | Descrição |
 |----------|--------|-----------|
-| `/eventos` | GET | Listar todos os eventos |
-| `/eventos/:id` | GET | Obter evento específico |
-| `/eventos` | POST | Criar novo evento |
-| `/eventos/:id` | PUT | Atualizar evento |
-| `/eventos/:id` | DELETE | Deletar evento |
-| `/eventos/:id/participantes` | GET | Listar participantes |
-| `/eventos/:id/participantes` | POST | Adicionar participante |
-| `/relatorio` | GET | Gerar relatório |
 | `/health` | GET | Status do servidor |
+| `/api/eventos` | GET | Listar todos os eventos |
+| `/api/eventos` | POST | Criar novo evento |
+| `/api/relatorio` | GET | Gerar relatório |
 
 ## 📊 **Dados de Exemplo**
 
-O sistema vem com 3 eventos de exemplo:
+O sistema vem com eventos de exemplo carregados do arquivo `backend/eventos.txt`:
 - Workshop de JavaScript
 - Palestra sobre React
 - Meetup de Desenvolvedores
@@ -97,9 +108,9 @@ O sistema vem com 3 eventos de exemplo:
 ## 🔧 **Configuração**
 
 ### **Porta do Servidor**
-Edite `server.js`:
-```javascript
-const PORT = 8080; // Mude para a porta desejada
+Edite `backend/simple_cpp_server.cpp`:
+```cpp
+serverAddr.sin_port = htons(8080); // Mude para a porta desejada
 ```
 
 ### **URL da API**
@@ -112,15 +123,15 @@ const API_BASE_URL = 'http://localhost:8080'; // Mude se necessário
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm start` | Iniciar servidor de produção |
-| `npm run dev` | Iniciar servidor de desenvolvimento |
-| `npm install` | Instalar dependências |
-| `npm test` | Executar testes |
+| `run_backend.bat` | Compilar e executar (recomendado) |
+| `backend/compile_simple.bat` | Compilar servidor C++ |
+| `backend/simple_cpp_server.exe` | Executar servidor |
+| `test_system.bat` | Testar sistema completo |
 
 ## 📞 **Suporte**
 
-Para mais detalhes, consulte o arquivo `COMO_RODAR.md`.
+Para mais detalhes sobre a integração C++, consulte o arquivo `INTEGRACAO_C++.md`.
 
 ---
 
-**🎉 Sistema pronto para uso!**
+**🎉 Sistema pronto para uso com backend C++ puro organizado!**
