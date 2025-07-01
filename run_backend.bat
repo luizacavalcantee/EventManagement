@@ -2,7 +2,7 @@
 echo 🚀 Sistema de Gerenciamento de Eventos - Backend C++
 echo ==================================================
 
-REM Navegar para a pasta backend
+REM Navegar para a pasta backend para compilar
 cd backend
 
 REM Compilar o servidor
@@ -15,6 +15,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Voltar para a pasta raiz do projeto
+cd ..
+
 echo.
 echo 🎉 Compilação concluída!
 echo 🚀 Iniciando servidor...
@@ -23,5 +26,5 @@ echo 🔧 Para parar o servidor, pressione Ctrl+C
 echo ==================================================
 echo.
 
-REM Executar o servidor
-simple_cpp_server.exe 
+REM Executar o servidor a partir da raiz, especificando seu caminho
+backend\simple_cpp_server.exe
