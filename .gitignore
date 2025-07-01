@@ -12,6 +12,7 @@
 
 # Diretório de build
 build/
+out/
 
 # Executáveis e arquivos de objeto
 *.exe
