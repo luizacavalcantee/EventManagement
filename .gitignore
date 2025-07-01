@@ -1,0 +1,35 @@
+# Arquivos temporários do Vim
+*.swp
+
+# Arquivos de backup
+*~
+
+# Arquivo do macOS Finder
+.DS_Store
+
+# Diretório do Visual Studio
+.vs/
+
+# Diretório de build
+build/
+out/
+
+# Executáveis e arquivos de objeto
+*.exe
+*.o
+*.obj
+*.dll
+*.lib
+*.so
+
+# Arquivos de log
+*.log
+
+# Arquivo específico do projeto
+eventos.txt
+
+# Configurações do VS Code (ignora tudo exceto os arquivos listados abaixo)
+.vscode/
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/c_cpp_properties.json

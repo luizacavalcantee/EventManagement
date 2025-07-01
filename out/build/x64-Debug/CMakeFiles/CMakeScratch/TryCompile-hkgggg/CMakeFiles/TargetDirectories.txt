@@ -1,3 +1,0 @@
-C:/Users/nayda/OneDrive/Área de Trabalho/Nova pasta/EventManagement/out/build/x64-Debug/CMakeFiles/CMakeScratch/TryCompile-hkgggg/CMakeFiles/cmTC_40249.dir
-C:/Users/nayda/OneDrive/Área de Trabalho/Nova pasta/EventManagement/out/build/x64-Debug/CMakeFiles/CMakeScratch/TryCompile-hkgggg/CMakeFiles/edit_cache.dir
-C:/Users/nayda/OneDrive/Área de Trabalho/Nova pasta/EventManagement/out/build/x64-Debug/CMakeFiles/CMakeScratch/TryCompile-hkgggg/CMakeFiles/rebuild_cache.dir
