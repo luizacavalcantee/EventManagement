@@ -24,4 +24,4 @@ echo ==================================================
 echo.
 
 REM Executar o servidor
-simple_cpp_server.exe 
+server_new.exe 

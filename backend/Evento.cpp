@@ -5,90 +5,127 @@
 
 //sobre a classe Evento
 
-Evento::Evento(std::string n, std::string d, std::string h, std::string l, std::string desc) {
-    id = 0; // Será definido pelo gerenciador
-    nome = n;
-    data = d;
-    hora = h;
-    local = l;
-    descricao = desc;
-    numParticipantes = 0;
-}
+Evento::Evento() : EventoBase(), categoria("Geral"), eventoAtivo(true) {}
 
-Evento::Evento(int id, std::string n, std::string d, std::string h, std::string l, std::string desc) {
-    this->id = id;
-    nome = n;
-    data = d;
-    hora = h;
-    local = l;
-    descricao = desc;
-    numParticipantes = 0;
-}
+Evento::Evento(std::string n, std::string d, std::string h, std::string l, std::string desc)
+    : EventoBase(0, n, d, h, l, desc), categoria("Geral"), eventoAtivo(true) {}
+
+Evento::Evento(int id, std::string n, std::string d, std::string h, std::string l, std::string desc)
+    : EventoBase(id, n, d, h, l, desc), categoria("Geral"), eventoAtivo(true) {}
 
 Evento::~Evento() {
-    for (int i = 0; i < numParticipantes; i++) {
-        delete participantes[i];
+    for (auto p : participantes) {
+        delete p;
+    }
+    participantes.clear();
+    
+    for (auto o : organizadores) {
+        delete o;
+    }
+    organizadores.clear();
+}
+
+void Evento::adicionarParticipante(Participante* p) {
+    if (podeInscricao()) {
+        participantes.push_back(p);
     }
 }
 
-void Evento::adicionarParticipante(std::string nome, std::string email, std::string contato) {
-    if (numParticipantes < 100) {
-        participantes[numParticipantes] = new Participante(nome, email, contato);
-        numParticipantes++;
-        std::cout << "Participante adicionado com sucesso!" << std::endl;
-    } else {
-        std::cout << "Evento lotado!" << std::endl;
+void Evento::adicionarOrganizador(Organizador* o) {
+    organizadores.push_back(o);
+}
+
+void Evento::removerParticipante(int index) {
+    if (index >= 0 && index < participantes.size()) {
+        delete participantes[index];
+        participantes.erase(participantes.begin() + index);
     }
 }
 
-int Evento::getId() const {
-    return id;
-}
-
-std::string Evento::getNome() const {
-    return nome;
-}
-
-std::string Evento::getData() const {
-    return data;
-}
-
-std::string Evento::getHora() const {
-    return hora;
-}
-
-std::string Evento::getLocal() const {
-    return local;
-}
-
-std::string Evento::getDescricao() const {
-    return descricao;
+void Evento::removerOrganizador(int index) {
+    if (index >= 0 && index < organizadores.size()) {
+        delete organizadores[index];
+        organizadores.erase(organizadores.begin() + index);
+    }
 }
 
 int Evento::getNumParticipantes() const {
-    return numParticipantes;
+    return participantes.size();
+}
+
+int Evento::getNumOrganizadores() const {
+    return organizadores.size();
 }
 
 Participante* Evento::getParticipante(int i) const {
-    return participantes[i];
+    if (i >= 0 && i < participantes.size()) {
+        return participantes[i];
+    }
+    return nullptr;
 }
 
-void Evento::setId(int id) {
-    this->id = id;
+Organizador* Evento::getOrganizador(int i) const {
+    if (i >= 0 && i < organizadores.size()) {
+        return organizadores[i];
+    }
+    return nullptr;
+}
+
+std::string Evento::getCategoria() const {
+    return categoria;
+}
+
+bool Evento::getEventoAtivo() const {
+    return eventoAtivo;
+}
+
+void Evento::setCategoria(std::string cat) {
+    categoria = cat;
+}
+
+void Evento::ativarEvento() {
+    eventoAtivo = true;
+}
+
+void Evento::desativarEvento() {
+    eventoAtivo = false;
 }
 
 void Evento::atualizarEvento(std::string n, std::string d, std::string h, std::string l, std::string desc) {
-    nome = n;
-    data = d;
-    hora = h;
-    local = l;
-    descricao = desc;
+    setNome(n);
+    setData(d);
+    setHora(h);
+    setLocal(l);
+    setDescricao(desc);
 }
 
 void Evento::salvarEvento(std::ofstream &arquivo) {
-    arquivo << id << "," << nome.c_str() << "," << data.c_str() << "," << hora.c_str() << "," 
-            << local.c_str() << "," << descricao.c_str() << std::endl;
-    for (int i = 0; i < numParticipantes; i++) {
-        arquivo << "PARTICIPANTE," << participantes[i]->toString().c_str() << std::endl;
-    }
+    arquivo << getId() << "," << getNome() << "," << getData() << "," 
+           << getHora() << "," << getLocal() << "," << getDescricao() << std::endl;
+}
+
+std::string Evento::getTipoEvento() const {
+    return "Evento Geral";
+}
+
+double Evento::calcularPreco() const {
+    return preco;
+}
+
+bool Evento::podeInscricao() const {
+    return eventoAtivo && participantes.size() < capacidadeMaxima;
+}
+
+std::string Evento::toString() const {
+    return EventoBase::toString() + ", Categoria: " + categoria + 
+           ", Participantes: " + std::to_string(participantes.size()) + 
+           ", Status: " + (eventoAtivo ? "Ativo" : "Inativo");
+}
+
+void Evento::exibirDetalhes() const {
+    EventoBase::exibirDetalhes();
+    std::cout << "Categoria: " << categoria << std::endl;
+    std::cout << "Status: " << (eventoAtivo ? "Ativo" : "Inativo") << std::endl;
+    std::cout << "Participantes: " << participantes.size() << "/" << capacidadeMaxima << std::endl;
+    std::cout << "Organizadores: " << organizadores.size() << std::endl;
 } 

@@ -12,7 +12,7 @@ if errorlevel 1 (
 
 REM Compilar o servidor
 echo 📦 Compilando api_server.cpp...
-g++ -std=c++17 -I. -o api_server.exe api_server.cpp Evento.cpp Participante.cpp GerenciadorEventos.cpp -lws2_32
+g++ -std=c++17 -I. -o api_server.exe simple_cpp_server.cpp Evento.cpp Participante.cpp GerenciadorEventos.cpp -lws2_32
 
 if errorlevel 1 (
     echo ❌ Erro na compilação!

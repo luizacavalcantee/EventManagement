@@ -10,9 +10,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Compilar o servidor simplificado
+REM Remover arquivo antigo se existir
+if exist server_new.exe del server_new.exe
+
+REM Compilar apenas o servidor simplificado (sem dependências externas)
 echo 📦 Compilando simple_cpp_server.cpp...
-g++ -std=c++17 -o simple_cpp_server.exe simple_cpp_server.cpp -lws2_32
+g++ -std=c++17 -I. -o server_new.exe simple_cpp_server.cpp -lws2_32
 
 if errorlevel 1 (
     echo ❌ Erro na compilação!
@@ -22,7 +25,7 @@ if errorlevel 1 (
 )
 
 echo ✅ Servidor simplificado compilado com sucesso!
-echo 🚀 Para executar: simple_cpp_server.exe
+echo 🚀 Para executar: server_new.exe
 echo 📱 Interface: http://localhost:8080/frontend/
 echo 📝 Este servidor usa apenas bibliotecas padrão do C++
 pause 
