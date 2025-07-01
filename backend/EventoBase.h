@@ -7,7 +7,7 @@
 
 // Classe base abstrata para todos os tipos de eventos
 class EventoBase {
-protected:
+private:
     int id;
     std::string nome;
     std::string data;
