@@ -23,5 +23,5 @@ echo 🔧 Para parar o servidor, pressione Ctrl+C
 echo ==================================================
 echo.
 
-REM Executar o servidor
-server_new.exe 
+REM Executar o servidor (usando .\ para compatibilidade com PowerShell)
+.\server_new.exe 
