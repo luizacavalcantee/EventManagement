@@ -28,7 +28,10 @@
 - 💾 Download automático
 - 📈 Estatísticas detalhadas
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> cd7cb784c9d1bd2683b8a5f6aafaa097d95f5c9c
 ## 📁 **Estrutura do Projeto**
 
 ```
@@ -52,4 +55,8 @@ EventManagement/
 │       └── utils/        # Utilitários
 ├── run_backend.bat       # Script principal de execução
 └── README.md            # Este arquivo
+<<<<<<< HEAD
 ```
+=======
+```
+>>>>>>> cd7cb784c9d1bd2683b8a5f6aafaa097d95f5c9c
