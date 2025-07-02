@@ -10,10 +10,13 @@ echo 📦 Compilando servidor C++...
 call scripts/compile_simple.bat
 
 if errorlevel 1 (
-    echo ❌ Erro na compilação!
+    echo ❌ Erro na compilacao!
     pause
     exit /b 1
 )
+
+REM Voltar para a pasta raiz do projeto para que o servidor encontre a pasta 'frontend'
+cd ..
 
 echo.
 echo 🎉 Compilação concluída!
