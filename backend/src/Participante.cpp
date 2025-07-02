@@ -2,24 +2,42 @@
 
 //´sobre a classe Participante
 
-Participante::Participante(std::string n, std::string e, std::string c) {
-    nome = n;
-    email = e;
-    contato = c;
-}
+// Construtores
+Participante::Participante() : Pessoa(), tipoIngresso("Normal"), presencaConfirmada(false) {}
 
-std::string Participante::getNome() const {
-    return nome;
-}
+Participante::Participante(std::string n, std::string e, std::string c) 
+    : Pessoa(n, e, c), tipoIngresso("Normal"), presencaConfirmada(false) {}
 
-std::string Participante::getEmail() const {
-    return email;
-}
+Participante::Participante(std::string n, std::string e, std::string c, std::string tipo)
+    : Pessoa(n, e, c), tipoIngresso(tipo), presencaConfirmada(false) {}
 
-std::string Participante::getContato() const {
-    return contato;
-}
-
+// Sobrescrevendo métodos virtuais da classe base
 std::string Participante::toString() const {
-    return nome + "," + email + "," + contato;
+    return Pessoa::toString() + ", Tipo: " + tipoIngresso + 
+           ", Presença: " + (presencaConfirmada ? "Confirmada" : "Pendente");
+}
+
+std::string Participante::getTipo() const {
+    return "Participante";
+}
+
+// Métodos específicos da classe Participante
+std::string Participante::getTipoIngresso() const {
+    return tipoIngresso;
+}
+
+bool Participante::getPresencaConfirmada() const {
+    return presencaConfirmada;
+}
+
+void Participante::setTipoIngresso(std::string tipo) {
+    tipoIngresso = tipo;
+}
+
+void Participante::confirmarPresenca() {
+    presencaConfirmada = true;
+}
+
+void Participante::cancelarPresenca() {
+    presencaConfirmada = false;
 } 
