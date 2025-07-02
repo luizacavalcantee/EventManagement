@@ -24,6 +24,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
+<<<<<<< HEAD
+echo ✅ Servidor simplificado compilado com sucesso!
+echo 🚀 Para executar: server_new.exe
+echo 📱 Interface: http://localhost:8080/frontend/
+echo 📝 Este servidor usa apenas bibliotecas padrão do C++
+pause 
+=======
 echo ✅ Servidor simplificado compilado com sucesso em 'bin\'!
 echo 🚀 Para executar, use o script 'run_backend.bat' ou execute 'backend\bin\simple_cpp_server.exe' da raiz do projeto.
 pause
+>>>>>>> b5b5ec589d2d2ee9a187678fb790317984044cb9

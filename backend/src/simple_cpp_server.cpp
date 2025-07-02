@@ -162,6 +162,34 @@ public:
         json += "}";
         return json;
     }
+
+    string inscreverParticipante(int eventoId, const string& nome, const string& email, const string& contato) {
+        // Implemente a lógica para inscrever um participante em um evento
+        // Esta é uma implementação básica e pode ser melhorada
+        if (participantes.find(eventoId) != participantes.end()) {
+            participantes[eventoId].push_back(Participante(nome, email, contato));
+            salvarEventos();
+            return "{\"status\":\"success\",\"message\":\"Participante inscrito com sucesso\"}";
+        } else {
+            return "{\"status\":\"error\",\"message\":\"Evento nao encontrado\"}";
+        }
+    }
+
+    string listarParticipantes(int eventoId) {
+        string json = "[";
+        if (participantes.find(eventoId) != participantes.end()) {
+            for (const auto& participante : participantes[eventoId]) {
+                if (json.length() > 1) json += ",";
+                json += "{";
+                json += "\"nome\":\"" + participante.nome + "\",";
+                json += "\"email\":\"" + participante.email + "\",";
+                json += "\"contato\":\"" + participante.contato + "\"";
+                json += "}";
+            }
+        }
+        json += "]";
+        return json;
+    }
 };
 
 // Funções auxiliares
@@ -300,6 +328,54 @@ int main() {
             } else if (path == "/api/relatorio" && method == "GET") {
                 cout << "Rota /api/relatorio (GET)" << endl << flush;
                 content = gerenciador.getRelatorio();
+            }
+            // Rotas para participantes
+            else if (path.find("/api/eventos/") == 0 && path.find("/participantes") != string::npos && method == "POST") {
+                cout << "Rota /api/eventos/{id}/participantes (POST)" << endl << flush;
+                
+                // Extrair ID do evento da URL
+                size_t startPos = path.find("/api/eventos/") + 13;
+                size_t endPos = path.find("/participantes");
+                if (startPos != string::npos && endPos != string::npos) {
+                    string idStr = path.substr(startPos, endPos - startPos);
+                    int eventoId = stoi(idStr);
+                    
+                    size_t bodyPos = request.find("\r\n\r\n");
+                    if (bodyPos != string::npos) {
+                        string body = request.substr(bodyPos + 4);
+                        string nome = parseJsonField(body, "nome");
+                        string email = parseJsonField(body, "email");
+                        string contato = parseJsonField(body, "contato");
+                        
+                        if (!nome.empty() && !email.empty()) {
+                            content = gerenciador.inscreverParticipante(eventoId, nome, email, contato);
+                        } else {
+                            status = "400 Bad Request";
+                            content = "{\"error\":\"Nome e email sao obrigatorios\"}";
+                        }
+                    } else {
+                        status = "400 Bad Request";
+                        content = "{\"error\":\"Corpo da requisicao ausente\"}";
+                    }
+                } else {
+                    status = "400 Bad Request";
+                    content = "{\"error\":\"ID do evento invalido\"}";
+                }
+            } else if (path.find("/api/eventos/") == 0 && path.find("/participantes") != string::npos && method == "GET") {
+                cout << "Rota /api/eventos/{id}/participantes (GET)" << endl << flush;
+                
+                // Extrair ID do evento da URL
+                size_t startPos = path.find("/api/eventos/") + 13;
+                size_t endPos = path.find("/participantes");
+                if (startPos != string::npos && endPos != string::npos) {
+                    string idStr = path.substr(startPos, endPos - startPos);
+                    int eventoId = stoi(idStr);
+                    
+                    content = gerenciador.listarParticipantes(eventoId);
+                } else {
+                    status = "400 Bad Request";
+                    content = "{\"error\":\"ID do evento invalido\"}";
+                }
             }
             // Rota para arquivos estáticos (frontend)
             else if (path.rfind("/frontend/", 0) == 0 || path == "/") {

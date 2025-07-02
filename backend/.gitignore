@@ -1,0 +1,30 @@
+# Arquivos executáveis
+*.exe
+*.out
+
+# Arquivos de objeto
+*.o
+*.obj
+
+# Arquivos de dependências
+*.d
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Arquivos de build
+build/
+dist/
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Arquivos de dados (opcional - descomente se não quiser versionar)
+# eventos.txt 
