@@ -12,7 +12,6 @@
 
 using namespace std;
 
-// Estrutura simples para Evento
 struct Evento {
     int id;
     string nome;
@@ -26,7 +25,6 @@ struct Evento {
         : id(i), nome(n), data(d), hora(h), local(l), descricao(desc), numParticipantes(0) {}
 };
 
-// Estrutura simples para Participante
 struct Participante {
     string nome;
     string email;
@@ -35,7 +33,6 @@ struct Participante {
     Participante(string n, string e, string c) : nome(n), email(e), contato(c) {}
 };
 
-// Gerenciador de eventos simplificado
 class GerenciadorEventos {
 private:
     vector<Evento> eventos;
@@ -59,7 +56,6 @@ public:
         
         while (getline(arquivo, linha)) {
             if (linha.find("PARTICIPANTE") == 0) {
-                // Processar participante
                 if (eventoAtual != -1) {
                     stringstream ss(linha);
                     string tipo, nome, email, contato;
@@ -70,7 +66,6 @@ public:
                     participantes[eventoAtual].push_back(Participante(nome, email, contato));
                 }
             } else {
-                // Processar evento
                 stringstream ss(linha);
                 string idStr, nome, data, hora, local, descricao;
                 getline(ss, idStr, ',');
@@ -143,15 +138,13 @@ public:
     string getRelatorio() {
         int totalEventos = eventos.size();
         int totalParticipantes = 0;
-        int eventosProximos = 0; // Simplificado: todos os eventos são "próximos"
+        int eventosProximos = 0;
         int eventosHoje = 0;
 
         for (const auto& par : participantes) {
             totalParticipantes += par.second.size();
         }
 
-        // Lógica de contagem (simplificada)
-        // Uma implementação real precisaria comparar as datas com a data atual
         eventosProximos = totalEventos; 
 
         string json = "{";
@@ -164,8 +157,6 @@ public:
     }
 
     string inscreverParticipante(int eventoId, const string& nome, const string& email, const string& contato) {
-        // Implemente a lógica para inscrever um participante em um evento
-        // Esta é uma implementação básica e pode ser melhorada
         if (participantes.find(eventoId) != participantes.end()) {
             participantes[eventoId].push_back(Participante(nome, email, contato));
             salvarEventos();
@@ -192,7 +183,6 @@ public:
     }
 };
 
-// Funções auxiliares
 string urlDecode(const string& str) {
     string result;
     for (size_t i = 0; i < str.length(); i++) {
@@ -219,7 +209,6 @@ string parseJsonField(const string& json, const string& field) {
     return json.substr(pos, end - pos);
 }
 
-// Extrai o caminho da requisição (ex: /api/eventos)
 string getRequestPath(const string& request) {
     size_t startPos = request.find(" ") + 1;
     size_t endPos = request.find(" ", startPos);
@@ -229,7 +218,6 @@ string getRequestPath(const string& request) {
     return request.substr(startPos, endPos - startPos);
 }
 
-// Servidor HTTP simples
 int main() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -298,12 +286,10 @@ int main() {
             string status = "200 OK";
 
             cout << "--> ROTEAMENTO: " << flush;
-            // Tratamento de requisições OPTIONS (CORS preflight)
             if (method == "OPTIONS") {
                 cout << "OPTIONS (CORS Preflight)" << endl << flush;
                 status = "204 No Content";
             }
-            // Rotas da API
             else if (path == "/health") {
                 cout << "Rota /health" << endl << flush;
                 content = "{\"status\":\"ok\",\"message\":\"Servidor funcionando!\"}";
@@ -329,11 +315,8 @@ int main() {
                 cout << "Rota /api/relatorio (GET)" << endl << flush;
                 content = gerenciador.getRelatorio();
             }
-            // Rotas para participantes
             else if (path.find("/api/eventos/") == 0 && path.find("/participantes") != string::npos && method == "POST") {
                 cout << "Rota /api/eventos/{id}/participantes (POST)" << endl << flush;
-                
-                // Extrair ID do evento da URL
                 size_t startPos = path.find("/api/eventos/") + 13;
                 size_t endPos = path.find("/participantes");
                 if (startPos != string::npos && endPos != string::npos) {
@@ -363,8 +346,6 @@ int main() {
                 }
             } else if (path.find("/api/eventos/") == 0 && path.find("/participantes") != string::npos && method == "GET") {
                 cout << "Rota /api/eventos/{id}/participantes (GET)" << endl << flush;
-                
-                // Extrair ID do evento da URL
                 size_t startPos = path.find("/api/eventos/") + 13;
                 size_t endPos = path.find("/participantes");
                 if (startPos != string::npos && endPos != string::npos) {
@@ -377,22 +358,16 @@ int main() {
                     content = "{\"error\":\"ID do evento invalido\"}";
                 }
             }
-            // Rota para arquivos estáticos (frontend)
             else if (path.rfind("/frontend/", 0) == 0 || path == "/") {
                 cout << "Rota de Arquivo Estatico" << endl << flush;
                 string filePath = (path == "/") ? "frontend/index.html" : path.substr(1);
-                
-                // Remove a query string (ex: ?v=1.1) do caminho do arquivo
                 size_t queryPos = filePath.find("?");
                 if (queryPos != string::npos) {
                     filePath = filePath.substr(0, queryPos);
                 }
-
-                // Se for um diretório, sirva o index.html
                 if (!filePath.empty() && filePath.back() == '/') {
                     filePath += "index.html";
                 }
-
                 ifstream file(filePath, ios::binary);
                 if (file) {
                     stringstream fileBuffer;
@@ -444,4 +419,4 @@ int main() {
     closesocket(serverSocket);
     WSACleanup();
     return 0;
-} 
+}
