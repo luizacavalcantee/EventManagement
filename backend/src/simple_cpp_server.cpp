@@ -196,6 +196,18 @@ public:
         }
         return false;
     }
+
+    bool deletarEvento(int eventoId) {
+        for (auto it = eventos.begin(); it != eventos.end(); ++it) {
+            if (it->id == eventoId) {
+                eventos.erase(it);
+                participantes.erase(eventoId);
+                salvarEventos();
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 string urlDecode(const string& str) {
@@ -403,6 +415,20 @@ int main() {
                 } else {
                     status = "400 Bad Request";
                     content = "{\"error\":\"Corpo da requisicao ausente\"}";
+                }
+            }
+            else if (path.find("/api/eventos/") == 0 && method == "DELETE") {
+                cout << "Rota /api/eventos/{id} (DELETE)" << endl << flush;
+                string idStr = path.substr(13);
+                int eventoId = stoi(idStr);
+
+                bool removido = gerenciador.deletarEvento(eventoId);
+                if (removido) {
+                    content = "{\"status\":\"success\",\"message\":\"Evento deletado com sucesso\"}";
+                    status = "200 OK";
+                } else {
+                    status = "404 Not Found";
+                    content = "{\"error\":\"Evento nao encontrado\"}";
                 }
             }
             else if (path.rfind("/frontend/", 0) == 0 || path == "/") {
