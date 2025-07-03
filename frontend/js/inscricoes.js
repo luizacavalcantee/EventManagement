@@ -103,12 +103,12 @@ class InscricoesApp {
         const noEventos = document.getElementById('noEventos');
         
         if (mostrar) {
-            loading.style.display = 'block';
+            loading.style.display = 'flex';
             lista.style.display = 'none';
             noEventos.style.display = 'none';
         } else {
             loading.style.display = 'none';
-            lista.style.display = 'block';
+            lista.style.display = 'flex';
         }
     }
 
