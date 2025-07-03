@@ -22,7 +22,7 @@ const CONFIG = {
         EVENTOS: '/api/eventos',
         PARTICIPANTES: '/api/participantes',
         RELATORIO: '/api/relatorio',
-        SALVAR: '/api/eventos/salvar'
+        SALVAR: '/api/eventos'
     }
 };
 

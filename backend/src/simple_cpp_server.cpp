@@ -181,6 +181,21 @@ public:
         json += "]";
         return json;
     }
+
+    bool atualizarEvento(int eventoId, const string& nome, const string& data, const string& hora, const string& local, const string& descricao) {
+        for (auto& evento : eventos) {
+            if (evento.id == eventoId) {
+                evento.nome = nome;
+                evento.data = data;
+                evento.hora = hora;
+                evento.local = local;
+                evento.descricao = descricao;
+                salvarEventos();
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 string urlDecode(const string& str) {
@@ -293,10 +308,12 @@ int main() {
             else if (path == "/health") {
                 cout << "Rota /health" << endl << flush;
                 content = "{\"status\":\"ok\",\"message\":\"Servidor funcionando!\"}";
-            } else if (path == "/api/eventos" && method == "GET") {
+            }
+            else if (path == "/api/eventos" && method == "GET") {
                 cout << "Rota /api/eventos (GET)" << endl << flush;
                 content = gerenciador.listarEventos();
-            } else if (path == "/api/eventos" && method == "POST") {
+            }
+            else if ((path == "/api/eventos" || path == "/api/eventos/") && method == "POST") {
                 cout << "Rota /api/eventos (POST)" << endl << flush;
                 size_t bodyPos = request.find("\r\n\r\n");
                 if (bodyPos != string::npos) {
@@ -307,11 +324,13 @@ int main() {
                     string local = parseJsonField(body, "local");
                     string descricao = parseJsonField(body, "descricao");
                     content = gerenciador.criarEvento(nome, data, hora, local, descricao);
+                    status  = "201 Created";
                 } else {
                     status = "400 Bad Request";
                     content = "{\"error\":\"Corpo da requisicao ausente\"}";
                 }
-            } else if (path == "/api/relatorio" && method == "GET") {
+            }
+            else if (path == "/api/relatorio" && method == "GET") {
                 cout << "Rota /api/relatorio (GET)" << endl << flush;
                 content = gerenciador.getRelatorio();
             }
@@ -322,14 +341,14 @@ int main() {
                 if (startPos != string::npos && endPos != string::npos) {
                     string idStr = path.substr(startPos, endPos - startPos);
                     int eventoId = stoi(idStr);
-                    
+
                     size_t bodyPos = request.find("\r\n\r\n");
                     if (bodyPos != string::npos) {
                         string body = request.substr(bodyPos + 4);
                         string nome = parseJsonField(body, "nome");
                         string email = parseJsonField(body, "email");
                         string contato = parseJsonField(body, "contato");
-                        
+
                         if (!nome.empty() && !email.empty()) {
                             content = gerenciador.inscreverParticipante(eventoId, nome, email, contato);
                         } else {
@@ -344,18 +363,46 @@ int main() {
                     status = "400 Bad Request";
                     content = "{\"error\":\"ID do evento invalido\"}";
                 }
-            } else if (path.find("/api/eventos/") == 0 && path.find("/participantes") != string::npos && method == "GET") {
+            }
+            else if (path.find("/api/eventos/") == 0 && path.find("/participantes") != string::npos && method == "GET") {
                 cout << "Rota /api/eventos/{id}/participantes (GET)" << endl << flush;
                 size_t startPos = path.find("/api/eventos/") + 13;
                 size_t endPos = path.find("/participantes");
                 if (startPos != string::npos && endPos != string::npos) {
                     string idStr = path.substr(startPos, endPos - startPos);
                     int eventoId = stoi(idStr);
-                    
+
                     content = gerenciador.listarParticipantes(eventoId);
                 } else {
                     status = "400 Bad Request";
                     content = "{\"error\":\"ID do evento invalido\"}";
+                }
+            }
+            else if (path.find("/api/eventos/") == 0 && method == "PUT") {
+                cout << "Rota /api/eventos/{id} (PUT)" << endl << flush;
+                string idStr = path.substr(13);
+                int eventoId = stoi(idStr);
+
+                size_t bodyPos = request.find("\r\n\r\n");
+                if (bodyPos != string::npos) {
+                    string body = request.substr(bodyPos + 4);
+                    string nome = parseJsonField(body, "nome");
+                    string data = parseJsonField(body, "data");
+                    string hora = parseJsonField(body, "hora");
+                    string local = parseJsonField(body, "local");
+                    string descricao = parseJsonField(body, "descricao");
+
+                    bool atualizado = gerenciador.atualizarEvento(eventoId, nome, data, hora, local, descricao);
+                    if (atualizado) {
+                        content = "{\"status\":\"success\",\"message\":\"Evento atualizado com sucesso\"}";
+                        status = "200 OK";
+                    } else {
+                        status = "404 Not Found";
+                        content = "{\"error\":\"Evento nao encontrado\"}";
+                    }
+                } else {
+                    status = "400 Bad Request";
+                    content = "{\"error\":\"Corpo da requisicao ausente\"}";
                 }
             }
             else if (path.rfind("/frontend/", 0) == 0 || path == "/") {
@@ -373,7 +420,7 @@ int main() {
                     stringstream fileBuffer;
                     fileBuffer << file.rdbuf();
                     content = fileBuffer.str();
-                    
+
                     string contentType = "text/html";
                     if (filePath.find(".css") != string::npos) contentType = "text/css";
                     if (filePath.find(".js") != string::npos) contentType = "application/javascript";
@@ -391,8 +438,8 @@ int main() {
                 send(clientSocket, response.c_str(), response.length(), 0);
                 closesocket(clientSocket);
                 continue;
-
-            } else {
+            }
+            else {
                 cout << "404 Nao Encontrado" << endl << flush;
                 status = "404 Not Found";
                 content = "{\"error\":\"Rota nao encontrada\"}";
