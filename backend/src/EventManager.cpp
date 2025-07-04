@@ -259,11 +259,16 @@ json EventManager::getDashboardStats() const {
     json stats;
     stats["totalEventos"] = events.size();
     int totalParticipants = 0;
-    std::string todayDate = "04/07/2025";
+    // CORREÇÃO: Use a função para obter a data atual
+    std::string todayDate = getCurrentDateFormatted(); 
     int upcomingEvents = 0;
     int eventsToday = 0;
     for (const auto& event : events) {
         totalParticipants += event->getNumParticipants();
+        // Certifique-se de que compareDates pode lidar com DD/MM/AAAA e DD-MM-AAAA
+        // Se o backend sempre salvar DD/MM/AAAA, o compareDates está ok.
+        // Se salvar DD-MM-AAAA, o compareDates precisará de ajustes ou o frontend 
+        // precisará converter antes de enviar.
         int comparison = compareDates(event->getDate(), todayDate);
         if (comparison == 0) {
             eventsToday++;

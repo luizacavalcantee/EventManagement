@@ -1,6 +1,6 @@
 class InscricoesApp {
     constructor() {
-        this.eventoList = new EventoList();
+        this.eventList = new EventList();
         this.eventos = [];
         this.eventoSelecionado = null;
         this.filtros = {
@@ -162,7 +162,7 @@ class InscricoesApp {
             this.mostrarNoEventos();
             return;
         }
-        this.eventoList.renderizarEventos(eventos, {
+        this.eventList.renderizarEventos(eventos, {
             mostrarAcoes: false,
             mostrarParticipantes: false,
             onInscrever: (evento) => this.abrirModalInscricao(evento)

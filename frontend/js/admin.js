@@ -1,8 +1,8 @@
 class AdminApp {
     constructor() {
         this.dashboard = new Dashboard();
-        this.eventoForm = new EventoForm();
-        this.eventoList = new EventoList();
+        this.eventForm = new EventForm();
+        this.eventList = new EventList();
         this.init();
     }
 
@@ -25,7 +25,7 @@ class AdminApp {
         const cancelBtn = document.getElementById('cancelBtn');
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
-                this.eventoForm.cancelarEdicao();
+                this.eventForm.cancelarEdicao();
             });
         }
     }
@@ -46,7 +46,7 @@ class AdminApp {
 
             this.dashboard.atualizarDashboard(relatorio);
 
-            this.eventoList.renderizarEventos(eventos, {
+            this.eventList.renderizarEventos(eventos, {
                 mostrarAcoes: true,
                 mostrarParticipantes: true,
                 onEditar: (evento) => this.editarEvento(evento),
@@ -61,7 +61,7 @@ class AdminApp {
     }
 
     editarEvento(evento) {
-        this.eventoForm.preencherParaEdicao(evento);
+        this.eventForm.preencherParaEdicao(evento);
     }
 
     async deletarEvento(evento) {
