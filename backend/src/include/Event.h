@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <stdexcept> // Inclua para std::invalid_argument
 #include "Participant.h"
 
 class Event {
@@ -25,6 +26,14 @@ public:
     Event();
     Event(int id, std::string name, std::string date, std::string time, std::string location, std::string description);
     ~Event();
+
+    // Método de validação com parâmetro para indicar se é uma criação (true por padrão)
+    void validate(bool forCreation = true) const;
+
+    // Métodos de validação auxiliares (para uso interno ou externo)
+    bool isValidDate(const std::string& d) const;
+    bool isValidTime(const std::string& t) const;
+    bool isFutureDateTime(const std::string& d, const std::string& t) const;
 
     int getId() const;
     std::string getName() const;

@@ -14,6 +14,7 @@ public:
     virtual std::string toString() const override;
     int getId() const;
     void setId(int newId);
+    // Herda validate() de Person, não precisa de override a menos que adicione regras específicas de participante
 };
 
 #endif // PARTICIPANT_H

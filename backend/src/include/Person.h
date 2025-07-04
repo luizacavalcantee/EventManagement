@@ -2,6 +2,7 @@
 #define PERSON_H
 
 #include <string>
+#include <stdexcept> // Inclua para std::invalid_argument
 
 class Person {
 protected:
@@ -13,6 +14,9 @@ public:
     Person();
     Person(std::string n, std::string e, std::string c = "");
     virtual ~Person();
+
+    // Método de validação
+    virtual void validate() const;
 
     virtual std::string getName() const;
     virtual std::string getEmail() const;

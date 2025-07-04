@@ -2,7 +2,7 @@
 
 Participant::Participant() : Person(), id(0) {}
 
-Participant::Participant(int id, std::string name, std::string email, std::string contact) 
+Participant::Participant(int id, std::string name, std::string email, std::string contact)
     : Person(name, email, contact), id(id) {}
 
 std::string Participant::toString() const {
