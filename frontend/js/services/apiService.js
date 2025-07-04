@@ -115,6 +115,10 @@ class ApiService {
       data
     );
   }
+  
+  static async getParticipanteById(eventoId, participanteId) {
+    return this.get(`${CONFIG.ENDPOINTS.EVENTOS}/${eventoId}/participantes/${participanteId}`);
+  }
 
   static async deleteParticipante(eventoId, participanteId) {
     return this.delete(
