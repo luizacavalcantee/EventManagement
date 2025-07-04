@@ -1,63 +1,39 @@
 #include <iostream>
-#include "GerenciadorEventos.h"
+#include <stdexcept> // For std::runtime_error and other exceptions
 
-//main fazendo a chamada do menu e das funcoes do gerenciador de eventos
-
-void exibirMenu() {
-    std::cout << "\n=== Sistema de Eventos ===" << std::endl;
-    std::cout << "1. Cadastrar evento" << std::endl;
-    std::cout << "2. Inscrever participante" << std::endl;
-    std::cout << "3. Gerar relatorio" << std::endl;
-    std::cout << "4. Atualizar evento" << std::endl;
-    std::cout << "5. Deletar evento" << std::endl;
-    std::cout << "6. Salvar eventos em arquivo" << std::endl;
-    std::cout << "7. Listar todos os eventos" << std::endl;
-    std::cout << "0. Sair" << std::endl;
-    std::cout << "Escolha uma opcao: ";
-}
+#include "EventManager.h" // Your core business logic manager
+#include "ApiServer.h"    // Your HTTP server implementation
 
 int main() {
-    GerenciadorEventos gerenciador;
-    int opcao;
+    // Define the port for the API server
+    const int API_PORT = 8080;
 
-    //carregar os eventos ao iniciar
-    gerenciador.carregarEventosDoArquivo();
+    try {
+        // 1. Initialize the EventManager (loads data from file)
+        std::cout << "Initializing Event Manager..." << std::endl;
+        EventManager eventManager;
+        std::cout << "Event Manager initialized successfully." << std::endl;
 
-    do {
-        exibirMenu();
-        std::cin >> opcao;
+        // 2. Initialize the API Server, passing the EventManager instance
+        std::cout << "Initializing API Server..." << std::endl;
+        ApiServer apiServer(eventManager);
+        std::cout << "API Server initialized successfully." << std::endl;
 
-        switch (opcao) {
-            case 1:
-                gerenciador.cadastrarEvento();
-                break;
-            case 2:
-                gerenciador.inscreverParticipante();
-                break;
-            case 3:
-                gerenciador.gerarRelatorio();
-                break;
-            case 4:
-                gerenciador.atualizarEvento();
-                break;
-            case 5:
-                gerenciador.deletarEvento();
-                break;
-            case 6:
-                gerenciador.salvarEventosEmArquivo();
-                break;
-            case 7:
-                gerenciador.listarEventos();
-                break;
-            case 0:
-                //vai saalvar os eventos antes de sair
-                gerenciador.salvarEventosEmArquivo();
-                std::cout << "Saindo do sistema..." << std::endl;
-                break;
-            default:
-                std::cout << "Opcao invalida!" << std::endl;
-        }
-    } while (opcao != 0);
+        // 3. Start the API Server
+        std::cout << "Starting API Server on port " << API_PORT << "..." << std::endl;
+        apiServer.start(API_PORT);
 
-    return 0;
+    } catch (const std::exception& e) {
+        // Catch any unhandled exceptions during setup or server runtime
+        std::cerr << "CRITICAL ERROR: An unhandled exception occurred: " << e.what() << std::endl;
+        std::cerr << "Server is shutting down." << std::endl;
+        return 1; // Indicate error
+    } catch (...) {
+        // Catch any other unknown exceptions
+        std::cerr << "CRITICAL ERROR: An unknown exception occurred." << std::endl;
+        std::cerr << "Server is shutting down." << std::endl;
+        return 1; // Indicate error
+    }
+
+    return 0; // Successful exit (though server loop is infinite)
 }

@@ -1,9 +1,12 @@
 @echo off
+REM Define a página de código do console para UTF-8 para exibir caracteres especiais corretamente.
+chcp 65001 > nul
+cls
+
 echo 🚀 Sistema de Gerenciamento de Eventos - Backend C++
 echo ==================================================
 
-REM **INÍCIO DA PARTE DE COMPILAÇÃO (antes era compile_simple.bat)**
-echo 📦 Compilando servidor C++ simplificado...
+echo 📦 Compilando backend C++...
 
 :: 1. Navegar para a pasta backend para compilar
 cd backend
@@ -19,9 +22,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: Compilar o servidor simplificado
-echo 📦 Compilando src/simple_cpp_server.cpp...
-g++ -std=c++17 -I./src -o ./build/server_new.exe ./src/simple_cpp_server.cpp -lws2_32
+:: Compilar todos os arquivos .cpp
+:: -std=c++17: Usa o padrão C++17
+:: -I./src/include: Adiciona o diretório include para buscar cabeçalhos (como json.hpp e os seus .h)
+:: -o ./build/backend.exe: Define o nome do executável de saída
+:: ./src/*.cpp: Compila todos os arquivos .cpp dentro de src/
+:: -lws2_32: Linka a biblioteca Winsock no Windows
+echo 📦 Compilando arquivos fonte...
+g++ -std=c++17 -I./src/include -o ./build/backend.exe ./src/ApiServer.cpp ./src/Event.cpp ./src/EventManager.cpp ./src/main.cpp ./src/Participant.cpp ./src/Person.cpp -lws2_32
 
 if errorlevel 1 (
     echo ❌ Erro na compilacao!
@@ -29,19 +37,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo ✅ Servidor simplificado compilado com sucesso!
-echo 🚀 Salvo em: backend/build/server_new.exe
-
-:: O 'pause' após a compilação pode ser útil para ver a mensagem,
-:: mas pode ser removido se o objetivo é apenas continuar.
-:: pause
-
-REM **FIM DA PARTE DE COMPILAÇÃO**
+echo ✅ Backend compilado com sucesso!
+echo 🚀 Salvo em: backend/build/backend.exe
 
 echo.
 echo 🎉 Compilação concluída!
 
-REM VOLTAR PARA A PASTA RAIZ ANTES DE INICIAR O SERVIDOR
+REM VOLTAR PARA A PASSTA RAIZ ANTES DE INICIAR O SERVIDOR
 cd ..
 
 echo 🚀 Iniciando servidor a partir da raiz do projeto...
@@ -51,4 +53,4 @@ echo ==================================================
 echo.
 
 REM Executar o servidor usando seu caminho a partir da raiz
-backend\build\server_new.exe
+backend\build\backend.exe
