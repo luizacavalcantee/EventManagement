@@ -32,6 +32,7 @@ private:
     void handlePutParticipant(SOCKET clientSocket, int eventId, int participantId, const std::string& requestBody);
     void handleDeleteParticipant(SOCKET clientSocket, int eventId, int participantId);
     void handleGetEventById(SOCKET clientSocket, int eventId);
+    void handleGetParticipantById(SOCKET clientSocket, int eventId, int participantId);
 
 public:
     ApiServer(EventManager& manager);

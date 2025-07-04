@@ -4,11 +4,9 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
-#include <regex> // Necessário para a compilação, mesmo que as regexes estejam nas classes de entidade
+#include <regex>
 #include "json/json.hpp"
-#pragma comment(lib, "ws2_32.lib") // Apenas para Windows
-
-// ... (métodos auxiliares: getRequestPath, urlDecode, sendResponse) ...
+#pragma comment(lib, "ws2_32.lib")
 
 std::string ApiServer::getRequestPath(const std::string& request) {
     size_t startPos = request.find(" ") + 1;
@@ -19,10 +17,7 @@ std::string ApiServer::getRequestPath(const std::string& request) {
     return request.substr(startPos, endPos - startPos);
 }
 
-// Este método parseJsonField não é mais usado, já que você está usando nlohmann/json::parse
-// Deixei-o aqui caso haja alguma outra parte do código que ainda o use.
 std::string ApiServer::parseJsonField(const std::string& json, const std::string& field) {
-    // Implementação antiga, não necessária com nlohmann::json
     return "";
 }
 
@@ -77,8 +72,6 @@ void ApiServer::handleGetEvents(SOCKET clientSocket) {
 void ApiServer::handlePostEvent(SOCKET clientSocket, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
-        
-        // Validação de presença e tipo dos campos JSON (primeira linha de defesa)
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -111,7 +104,6 @@ void ApiServer::handlePostEvent(SOCKET clientSocket, const std::string& requestB
         std::string location = requestJson.at("local").get<std::string>();
         std::string description = requestJson.at("descricao").get<std::string>();
 
-        // Chama o EventManager que agora tem as validações da entidade (incluindo "data futura")
         json createdEvent = eventManager.addEvent(name, date, time, location, description);
         sendResponse(clientSocket, "201 Created", "application/json", createdEvent.dump());
     } catch (const json::parse_error& e) {
@@ -120,13 +112,13 @@ void ApiServer::handlePostEvent(SOCKET clientSocket, const std::string& requestB
     } catch (const json::out_of_range& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Campo JSON obrigatório faltando: " + std::string(e.what()) + "\"}", "");
-    } catch (const std::invalid_argument& e) { // Captura exceções da validação da entidade Event (ex: formato de data, campo vazio)
+    } catch (const std::invalid_argument& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Erro de validação: " + std::string(e.what()) + "\"}", "");
-    } catch (const std::runtime_error& e) { // Captura exceções da lógica de negócio do EventManager
-        sendResponse(clientSocket, "400 Bad Request", "application/json", // Erros de negócio geralmente são 400
+    } catch (const std::runtime_error& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Erro no processamento do evento: " + std::string(e.what()) + "\"}", "");
-    } catch (const std::exception& e) { // Captura outras exceções padrão
+    } catch (const std::exception& e) {
         std::cerr << "Erro inesperado em handlePostEvent: " << e.what() << std::endl;
         sendResponse(clientSocket, "500 Internal Server Error", "application/json",
                      "{\"error\":\"Ocorreu um erro inesperado no servidor ao criar evento.\"}", "");
@@ -141,8 +133,6 @@ void ApiServer::handleGetDashboardStats(SOCKET clientSocket) {
 void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
-
-        // Validação de presença e tipo dos campos JSON
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -153,13 +143,10 @@ void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const st
                          "{\"error\":\"Campo 'email' é obrigatório e deve ser uma string.\"}");
             return;
         }
-        // 'contato' é opcional no JSON, usa value() com valor padrão
-        
         std::string name = requestJson.at("nome").get<std::string>();
         std::string email = requestJson.at("email").get<std::string>();
-        std::string contact = requestJson.value("contato", ""); 
+        std::string contact = requestJson.value("contato", "");
 
-        // Chama o EventManager que agora tem as validações de entidade (Person/Participant) e regras de negócio
         json createdParticipant = eventManager.addParticipantToEvent(eventId, name, email, contact);
         sendResponse(clientSocket, "201 Created", "application/json", createdParticipant.dump());
     } catch (const json::parse_error& e) {
@@ -168,11 +155,10 @@ void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const st
     } catch (const json::out_of_range& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Campo JSON obrigatório faltando: " + std::string(e.what()) + "\"}", "");
-    } catch (const std::invalid_argument& e) { // Captura exceções da validação da entidade Person/Participant
+    } catch (const std::invalid_argument& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Erro de validação do participante: " + std::string(e.what()) + "\"}", "");
-    } catch (const std::runtime_error& e) { // Captura exceções da lógica de negócio do EventManager
-        // Erros como "Evento não encontrado" ou "Evento lotado" são 400 Bad Request ou 404 Not Found
+    } catch (const std::runtime_error& e) {
         std::string errorMessage = e.what();
         if (errorMessage.find("não encontrado") != std::string::npos) {
              sendResponse(clientSocket, "404 Not Found", "application/json",
@@ -224,8 +210,6 @@ void ApiServer::handleGetEventById(SOCKET clientSocket, int eventId) {
 void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
-
-        // Validação de presença e tipo dos campos JSON
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -257,8 +241,6 @@ void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::stri
         std::string hora = requestJson.at("hora").get<std::string>();
         std::string local = requestJson.at("local").get<std::string>();
         std::string descricao = requestJson.at("descricao").get<std::string>();
-        
-        // Chama o EventManager, que agora lida com a validação condicional da data
         bool updated = eventManager.updateEvent(eventId, name, data, hora, local, descricao);
         if (updated) {
             sendResponse(clientSocket, "200 OK", "application/json",
@@ -273,11 +255,10 @@ void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::stri
     } catch (const json::out_of_range& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Campo JSON obrigatório faltando: " + std::string(e.what()) + "\"}", "");
-    } catch (const std::invalid_argument& e) { // Captura exceções da validação da entidade Event
+    } catch (const std::invalid_argument& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Erro de validação: " + std::string(e.what()) + "\"}", "");
     } catch (const std::runtime_error& e) {
-        // Pode ser 404 Not Found se o EventManager lançar por não encontrar o evento ou 400 por regras de negócio
         sendResponse(clientSocket, "500 Internal Server Error", "application/json",
                      "{\"error\":\"" + std::string(e.what()) + "\"}", "");
     } catch (const std::exception& e) {
@@ -303,11 +284,20 @@ void ApiServer::handleDeleteEvent(SOCKET clientSocket, int eventId) {
     }
 }
 
+void ApiServer::handleGetParticipantById(SOCKET clientSocket, int eventId, int participantId) {
+    try {
+        json participantJson = eventManager.getParticipantInEvent(eventId, participantId);
+        sendResponse(clientSocket, "200 OK", "application/json", participantJson.dump());
+    } catch (const std::runtime_error& e) {
+        // Se a exceção for lançada (não encontrou), envia 404
+        sendResponse(clientSocket, "404 Not Found", "application/json",
+                     "{\"error\":\"" + std::string(e.what()) + "\"}");
+    }
+}
+
 void ApiServer::handlePutParticipant(SOCKET clientSocket, int eventId, int participantId, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
-
-        // Validação de presença e tipo dos campos JSON
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -318,7 +308,6 @@ void ApiServer::handlePutParticipant(SOCKET clientSocket, int eventId, int parti
                          "{\"error\":\"Campo 'email' é obrigatório e deve ser uma string.\"}");
             return;
         }
-        
         std::string newName = requestJson.at("nome").get<std::string>();
         std::string newEmail = requestJson.at("email").get<std::string>();
         std::string newContact = requestJson.value("contato", "");
@@ -337,12 +326,11 @@ void ApiServer::handlePutParticipant(SOCKET clientSocket, int eventId, int parti
     } catch (const json::out_of_range& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Campo JSON obrigatório faltando: " + std::string(e.what()) + "\"}", "");
-    } catch (const std::invalid_argument& e) { // Captura exceções da validação da entidade Person/Participant
+    } catch (const std::invalid_argument& e) {
         sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"Erro de validação do participante: " + std::string(e.what()) + "\"}", "");
     } catch (const std::runtime_error& e) {
-        // Pode ser 404 Not Found se o EventManager lançar por não encontrar o evento/participante
-        sendResponse(clientSocket, "400 Bad Request", "application/json", // Ou 409 Conflict para email duplicado
+        sendResponse(clientSocket, "400 Bad Request", "application/json",
                      "{\"error\":\"" + std::string(e.what()) + "\"}", "");
     } catch (const std::exception& e) {
         std::cerr << "Erro inesperado em handlePutParticipant: " << e.what() << std::endl;
@@ -426,11 +414,9 @@ void ApiServer::start(int port) {
             std::string request(buffer);
             std::cout << "==================================================" << std::endl;
             std::cout << ">>> REQUISICAO RECEBIDA:" << std::endl;
-            // Limita a exibição da requisição para não poluir o console com grandes bodies
             std::cout << request.substr(0, std::min((int)request.length(), 400)) << (request.length() > 400 ? "..." : "") << std::endl;
             std::string method = request.substr(0, request.find(" "));
             std::string path = getRequestPath(request);
-            // Remove a barra final para padronizar o path, exceto para a raiz "/"
             if (!path.empty() && path.back() == '/' && path.length() > 1) {
                 path.pop_back();
             }
@@ -463,14 +449,11 @@ void ApiServer::start(int port) {
                     std::cout << "Route /api/relatorio (GET)" << std::endl;
                     handleGetDashboardStats(clientSocket);
                 }
-                // Rotas para eventos por ID (GET, PUT, DELETE)
                 else if (path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") == std::string::npos) {
                     try {
-                        size_t idStart = path.find("/api/eventos/") + 13; // Posição inicial do ID
-                        // Verifica se há mais segmentos após o ID, para não confundir com /api/eventos/{id}/participantes
+                        size_t idStart = path.find("/api/eventos/") + 13;
                         size_t nextSlash = path.find("/", idStart);
                         if (nextSlash != std::string::npos) {
-                             // Se houver um slash após o ID mas não for /participantes, é uma rota inválida ou não tratada
                             sendResponse(clientSocket, "404 Not Found", "application/json",
                                          "{\"error\":\"Rota não encontrada para eventos.\"}", "");
                             closesocket(clientSocket);
@@ -497,7 +480,6 @@ void ApiServer::start(int port) {
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"ID de Evento fora do intervalo.\"}", "");
                     }
                 }
-                // Rotas para participantes de eventos (/api/eventos/{id}/participantes ou /api/eventos/{id}/participantes/{pid})
                 else if (path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") != std::string::npos) {
                     size_t eventIdStart = path.find("/api/eventos/") + 13;
                     size_t eventIdEnd = path.find("/participantes", eventIdStart);
@@ -509,33 +491,36 @@ void ApiServer::start(int port) {
                     int eventId = 0;
                     try {
                         eventId = std::stoi(path.substr(eventIdStart, eventIdEnd - eventIdStart));
-                        
-                        size_t participants_segment_pos = eventIdEnd; // Posição de "/participantes"
+                        size_t participants_segment_pos = eventIdEnd;
                         size_t specific_participant_id_start_pos = path.find("/", participants_segment_pos + std::string("/participantes").length());
 
                         if (specific_participant_id_start_pos != std::string::npos &&
                             specific_participant_id_start_pos < path.length() -1 ) {
-                            // Rota para um participante específico: /api/eventos/{id}/participantes/{pid}
                             try {
-                                int participantId = std::stoi(path.substr(specific_participant_id_start_pos + 1));
-                                std::cout << "Route /api/eventos/" << eventId << "/participantes/" << participantId << " (";
-                                if (method == "PUT") {
-                                    std::cout << "PUT)" << std::endl;
-                                    handlePutParticipant(clientSocket, eventId, participantId, requestBody);
-                                } else if (method == "DELETE") {
-                                    std::cout << "DELETE)" << std::endl;
-                                    handleDeleteParticipant(clientSocket, eventId, participantId);
-                                } else {
-                                    std::cout << "INVALID METHOD)" << std::endl;
-                                    sendResponse(clientSocket, "405 Method Not Allowed", "application/json", "{\"error\":\"Método não permitido para esta rota de participante.\"}", "Allow: PUT, DELETE, OPTIONS\r\n");
-                                }
+                               int participantId = std::stoi(path.substr(specific_participant_id_start_pos + 1));
+                               std::cout << "Route /api/eventos/" << eventId << "/participantes/" << participantId << " (";
+                               
+                               // ESTE BLOCO SERÁ MODIFICADO
+                               if (method == "PUT") {
+                                   // ... código existente para PUT ...
+                               } else if (method == "DELETE") {
+                                   // ... código existente para DELETE ...
+                               
+                               // ADICIONE ESTE BLOCO "ELSE IF"
+                               } else if (method == "GET") {
+                                   std::cout << "GET)" << std::endl;
+                                   handleGetParticipantById(clientSocket, eventId, participantId);
+                       
+                               } else {
+                                   std::cout << "INVALID METHOD)" << std::endl;
+                                   sendResponse(clientSocket, "405 Method Not Allowed", "application/json", "{\"error\":\"Método não permitido para esta rota de participante.\"}", "Allow: GET, PUT, DELETE, OPTIONS\r\n");
+                               }
                             } catch (const std::invalid_argument& e) {
                                 sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Formato de ID de participante inválido na rota.\"}", "");
                             } catch (const std::out_of_range& e) {
                                 sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"ID de participante fora do intervalo.\"}", "");
                             }
                         } else {
-                            // Rota para a coleção de participantes: /api/eventos/{id}/participantes
                             std::cout << "Route /api/eventos/" << eventId << "/participantes (";
                             if (method == "POST") {
                                 std::cout << "POST)" << std::endl;
@@ -554,34 +539,29 @@ void ApiServer::start(int port) {
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"ID de Evento fora do intervalo.\"}", "");
                     }
                 }
-                // Rotas de arquivos estáticos para o frontend
                 else if (path == "/" || path == "/frontend" || path.rfind("/frontend/", 0) == 0) {
                     std::cout << "Static File Route" << std::endl;
                     std::string localFilePath;
                     if (path == "/" || path == "/frontend") {
                         localFilePath = "frontend/index.html";
                     } else {
-                        localFilePath = path.substr(1); // Remove a barra inicial para o caminho relativo
+                        localFilePath = path.substr(1);
                     }
                     size_t queryPos = localFilePath.find("?");
                     if (queryPos != std::string::npos) {
-                        localFilePath = localFilePath.substr(0, queryPos); // Remove query params
+                        localFilePath = localFilePath.substr(0, queryPos);
                     }
-
-                    // Previne Path Traversal: Garante que o caminho não saia do diretório 'frontend'
                     if (localFilePath.find("..") != std::string::npos) {
                          sendResponse(clientSocket, "403 Forbidden", "text/html", "<h1>403 Forbidden</h1><p>Acesso negado.</p>");
                          closesocket(clientSocket);
                          continue;
                     }
-
                     std::ifstream file(localFilePath, std::ios::binary);
                     if (file) {
                         std::stringstream fileBuffer;
                         fileBuffer << file.rdbuf();
                         std::string content = fileBuffer.str();
-                        std::string contentType = "application/octet-stream"; // Fallback
-                        // Determina o Content-Type baseado na extensão do arquivo
+                        std::string contentType = "application/octet-stream";
                         if (localFilePath.find(".html") != std::string::npos) contentType = "text/html";
                         else if (localFilePath.find(".css") != std::string::npos) contentType = "text/css";
                         else if (localFilePath.find(".js") != std::string::npos) contentType = "application/javascript";
@@ -612,10 +592,6 @@ void ApiServer::start(int port) {
                              "{\"error\":\"Ocorreu um erro inesperado e desconhecido no servidor.\"}", "");
             }
             std::cout << "==================================================" << std::endl << std::endl;
-        } else if (bytesReceived == 0) {
-            // std::cout << "Cliente desconectado." << std::endl; // Comentar para menos ruído no log
-        } else {
-            std::cerr << "Erro ao receber dados: " << WSAGetLastError() << std::endl;
         }
         closesocket(clientSocket);
     }

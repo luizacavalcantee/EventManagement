@@ -118,6 +118,24 @@ json EventManager::addEvent(const std::string& name, const std::string& date,
     return eventJson;
 }
 
+json EventManager::getParticipantInEvent(int eventId, int participantId) const {
+    const Event* event = findEventById(eventId);
+    if (event) {
+        const Participant* p = event->getParticipant(participantId);
+        if (p) {
+            // Se o participante for encontrado, cria e retorna o JSON
+            json pJson;
+            pJson["id"] = p->getId();
+            pJson["nome"] = p->getName();
+            pJson["email"] = p->getEmail();
+            pJson["contato"] = p->getContact();
+            return pJson;
+        }
+    }
+    // Se o evento ou o participante não forem encontrados, lança uma exceção
+    throw std::runtime_error("Evento ou Participante não encontrado.");
+}
+
 const Event& EventManager::getEventById(int id) const {
     const Event* event = findEventById(id);
     if (!event) {
