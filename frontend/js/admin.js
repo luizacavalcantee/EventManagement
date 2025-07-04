@@ -10,7 +10,6 @@ class AdminApp {
         try {
             await this.carregarDados();
             this.setupEventListeners();
-            this.setMinDate();
         } catch (error) {
             console.error('Erro ao inicializar aplicação:', error);
             NotificationUtils.error('Erro ao carregar dados. Verifique se o servidor está rodando.');
