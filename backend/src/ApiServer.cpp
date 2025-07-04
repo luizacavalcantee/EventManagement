@@ -142,6 +142,27 @@ void ApiServer::handleGetParticipants(SOCKET clientSocket, int eventId) {
     }
 }
 
+// NOVO: Handler para GET /api/eventos/{id}
+void ApiServer::handleGetEventById(SOCKET clientSocket, int eventId) {
+    try {
+        const Event& event = eventManager.getEventById(eventId);
+        json eventJson;
+        eventJson["id"] = event.getId();
+        eventJson["nome"] = event.getName();
+        eventJson["data"] = event.getDate();
+        eventJson["hora"] = event.getTime();
+        eventJson["local"] = event.getLocation();
+        eventJson["descricao"] = event.getDescription();
+        eventJson["numParticipantes"] = event.getNumParticipants();
+        // Inclua outros campos se o frontend precisar (ex: category, isActive, etc.)
+        
+        sendResponse(clientSocket, "200 OK", "application/json", eventJson.dump());
+    } catch (const std::runtime_error& e) {
+        sendResponse(clientSocket, "404 Not Found", "application/json", 
+                     "{\"error\":\"" + std::string(e.what()) + "\"}", "");
+    }
+}
+
 void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
@@ -167,7 +188,6 @@ void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::stri
         sendResponse(clientSocket, "400 Bad Request", "application/json", 
                      "{\"error\":\"Missing required JSON field: " + std::string(e.what()) + "\"}", "");
     } catch (const std::runtime_error& e) {
-        // CORREÇÃO: Usar clientSocket em vez de clientClient
         sendResponse(clientSocket, "500 Internal Server Error", "application/json", 
                      "{\"error\":\"" + std::string(e.what()) + "\"}", "");
     }
@@ -368,8 +388,23 @@ void ApiServer::start(int port) {
                     std::cout << "Route /api/relatorio (GET)" << std::endl;
                     handleGetDashboardStats(clientSocket);
                 }
+                // --- NOVO: Rota para GET /api/eventos/{id} ---
+                else if (method == "GET" && path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") == std::string::npos) {
+                    try {
+                        size_t idStart = path.find("/api/eventos/") + 13;
+                        int eventId = std::stoi(path.substr(idStart));
+                        std::cout << "Route /api/eventos/{id} (GET) for ID: " << eventId << std::endl;
+                        handleGetEventById(clientSocket, eventId); // Chama o novo handler
+                    } catch (const std::invalid_argument& e) {
+                        sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Invalid Event ID format.\"}", "");
+                    } catch (const std::out_of_range& e) {
+                        sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Event ID out of range.\"}", "");
+                    }
+                }
+                // --- FIM NOVO TRECHO ---
                 // --- Event Specific Routes (PUT/DELETE) ---
-                else if (path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") == std::string::npos) {
+                // AGORA, este bloco lida apenas com PUT e DELETE para /api/eventos/{id}
+                else if ((method == "PUT" || method == "DELETE") && path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") == std::string::npos) {
                     try {
                         size_t idStart = path.find("/api/eventos/") + 13;
                         int eventId = std::stoi(path.substr(idStart));
@@ -377,16 +412,13 @@ void ApiServer::start(int port) {
                         if (method == "PUT") {
                             std::cout << "Route /api/eventos/{id} (PUT) for ID: " << eventId << std::endl;
                             handlePutEvent(clientSocket, eventId, requestBody);
-                        } else if (method == "DELETE") {
+                        } else { // Must be DELETE
                             std::cout << "Route /api/eventos/{id} (DELETE) for ID: " << eventId << std::endl;
                             handleDeleteEvent(clientSocket, eventId);
-                        } else {
-                            sendResponse(clientSocket, "405 Method Not Allowed", "application/json", "{\"error\":\"Method not allowed for this route.\"}", "Allow: GET, POST, PUT, DELETE, OPTIONS\r\n");
                         }
                     } catch (const std::invalid_argument& e) {
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Invalid Event ID format.\"}", "");
                     } catch (const std::out_of_range& e) {
-                        // CORREÇÃO: Usar clientSocket em vez de clientClient
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Event ID out of range.\"}", "");
                     }
                 }
@@ -480,35 +512,46 @@ void ApiServer::start(int port) {
                     }
                 }
                 // --- Static File Serving ---
-                else if (path.rfind("/frontend/", 0) == 0 || path == "/") {
+                else if (path == "/" || path == "/frontend" || path.rfind("/frontend/", 0) == 0) { // Check for root, /frontend, or paths starting with /frontend/
                     std::cout << "Static File Route" << std::endl;
-                    std::string filePath = (path == "/") ? "frontend/index.html" : path.substr(1);
-                    size_t queryPos = filePath.find("?");
-                    if (queryPos != std::string::npos) {
-                        filePath = filePath.substr(0, queryPos); 
-                    }
-                    if (!filePath.empty() && filePath.back() == '/') {
-                        filePath += "index.html"; 
+                    
+                    std::string localFilePath; // The path to the file on disk
+
+                    if (path == "/" || path == "/frontend") {
+                        localFilePath = "frontend/index.html"; // Default for root or /frontend
+                    } else {
+                        // For paths like /frontend/admin.html, /frontend/css/styles.css, etc.
+                        // path.substr(1) transforms "/frontend/xyz" to "frontend/xyz"
+                        localFilePath = path.substr(1); 
                     }
                     
-                    std::ifstream file(filePath, std::ios::binary);
+                    // Remove query parameters if any (e.g., /frontend/index.html?param=value)
+                    size_t queryPos = localFilePath.find("?");
+                    if (queryPos != std::string::npos) {
+                        localFilePath = localFilePath.substr(0, queryPos); 
+                    }
+                    
+                    std::ifstream file(localFilePath, std::ios::binary); // Open the file
                     if (file) {
                         std::stringstream fileBuffer;
                         fileBuffer << file.rdbuf();
                         std::string content = fileBuffer.str();
 
-                        std::string contentType = "text/html";
-                        if (filePath.find(".css") != std::string::npos) contentType = "text/css";
-                        else if (filePath.find(".js") != std::string::npos) contentType = "application/javascript";
-                        else if (filePath.find(".png") != std::string::npos) contentType = "image/png"; 
-                        else if (filePath.find(".jpg") != std::string::npos || filePath.find(".jpeg") != std::string::npos) contentType = "image/jpeg";
-                        else if (filePath.find(".ico") != std::string::npos) contentType = "image/x-icon";
+                        // Determine Content-Type based on file extension
+                        std::string contentType = "application/octet-stream"; // Default generic
+                        if (localFilePath.find(".html") != std::string::npos) contentType = "text/html";
+                        else if (localFilePath.find(".css") != std::string::npos) contentType = "text/css";
+                        else if (localFilePath.find(".js") != std::string::npos) contentType = "application/javascript";
+                        else if (localFilePath.find(".png") != std::string::npos) contentType = "image/png";
+                        else if (localFilePath.find(".jpg") != std::string::npos || localFilePath.find(".jpeg") != std::string::npos) contentType = "image/jpeg";
+                        else if (localFilePath.find(".ico") != std::string::npos) contentType = "image/x-icon";
+                        // Add more content types as needed
 
                         sendResponse(clientSocket, "200 OK", contentType, content);
                     } else {
-                        std::cout << "File not found: " << filePath << std::endl;
+                        std::cout << "File not found: " << localFilePath << std::endl;
                         sendResponse(clientSocket, "404 Not Found", "text/html", 
-                                     "<h1>404 Not Found</h1><p>The requested file '" + filePath + "' wasd not found.</p>");
+                                     "<h1>404 Not Found</h1><p>The requested file '" + localFilePath + "' was not found.</p>");
                     }
                 }
                 // --- 404 Not Found for API routes ---

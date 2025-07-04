@@ -24,7 +24,7 @@ class NotificationUtils {
         
         // Auto-remove após o tempo especificado
         setTimeout(() => {
-            if (alertDiv.parentNode) {
+            if (alertDiv.parentNode) { // Verifica se ainda está no DOM antes de remover
                 alertDiv.remove();
             }
         }, duration);
@@ -63,21 +63,21 @@ class NotificationUtils {
     }
 
     /**
-     * Mostra uma confirmação
+     * Mostra uma confirmação usando o modal nativo do navegador
      * @param {string} message - Mensagem de confirmação
-     * @returns {Promise<boolean>} Promise que resolve para true se confirmado
+     * @returns {Promise<boolean>} Promise que resolve para true se confirmado, false caso contrário
      */
     static confirm(message) {
         return new Promise((resolve) => {
-            const result = confirm(message);
+            const result = confirm(message); // Usa o confirm() nativo do navegador
             resolve(result);
         });
     }
 
     /**
-     * Obtém o ícone apropriado para cada tipo de notificação
+     * Obtém o ícone apropriado para cada tipo de notificação (Font Awesome)
      * @param {string} type - Tipo da notificação
-     * @returns {string} Classe do ícone
+     * @returns {string} Classe do ícone (ex: 'fa-check-circle')
      */
     static getIconForType(type) {
         const icons = {
@@ -86,11 +86,11 @@ class NotificationUtils {
             warning: 'fa-exclamation-triangle',
             info: 'fa-info-circle'
         };
-        return icons[type] || icons.info;
+        return icons[type] || icons.info; // Retorna o ícone correspondente ou o ícone de info como fallback
     }
 
     /**
-     * Limpa todas as notificações
+     * Limpa todas as notificações toast atualmente visíveis no DOM
      */
     static clearAll() {
         const notifications = document.querySelectorAll('.alert.position-fixed');
@@ -101,4 +101,4 @@ class NotificationUtils {
 // Exportar utilitário
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = NotificationUtils;
-} 
+}
