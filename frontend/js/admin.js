@@ -89,6 +89,31 @@ class AdminApp {
             NotificationUtils.error('Erro ao carregar participantes. Tente novamente.');
         }
     }
+    async deletarParticipante(eventoId, participanteId, participanteNome) {
+        if (confirm(`Tem certeza que deseja remover o participante "${participanteNome}" do evento?`)) {
+            try {
+                await ApiService.deleteParticipante(eventoId, participanteId);
+                NotificationUtils.success('Participante removido com sucesso!');
+
+                // Recarrega os participantes diretamente no modal sem fechá-lo
+                // Verifica se o modal de participantes está aberto e é para o evento correto
+                const participantesModalElement = document.getElementById('participantesModal');
+                const bsModal = bootstrap.Modal.getInstance(participantesModalElement);
+                if (bsModal && bsModal._isShown && this.currentEventInModal && this.currentEventInModal.id === eventoId) {
+                     const evento = await ApiService.getEvento(eventoId); // Pega o evento atualizado para obter o novo numParticipantes
+                     this.renderizarParticipantes(evento, await ApiService.getParticipantes(eventoId));
+                } else {
+                    // Se o modal não estiver aberto ou for outro evento, apenas recarrega os dados globais
+                    this.carregarDados();
+                }
+                
+                this.carregarDados(); // Atualiza a tabela principal de eventos para refletir a mudança no contador de participantes
+            } catch (error) {
+                console.error('Erro ao remover participante:', error);
+                NotificationUtils.error('Erro ao remover participante. Tente novamente.');
+            }
+        }
+    }
 
     renderizarParticipantes(evento, participantes) {
         const container = document.getElementById('participantesList');
@@ -121,12 +146,13 @@ class AdminApp {
                             <th><i class="fas fa-user me-1"></i>Nome</th>
                             <th><i class="fas fa-envelope me-1"></i>Email</th>
                             <th><i class="fas fa-phone me-1"></i>Contato</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
 
-        participantes.forEach((participante, index) => {
+        participantes.forEach((participante) => {
             html += `
                 <tr>
                     <td>
@@ -144,6 +170,20 @@ class AdminApp {
                     </td>
                     <td>
                         ${participante.contato || '<span class="text-muted">Não informado</span>'}
+                    </td>
+                    <td class="action-buttons">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-warning" 
+                                onclick="window.adminApp.editarParticipante('${evento.id}', '${participante.id}')" 
+                                title="Editar Participante">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                onclick="window.adminApp.deletarParticipante('${evento.id}', '${participante.id}', '${participante.nome}')" 
+                                title="Excluir Participante">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;

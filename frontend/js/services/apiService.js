@@ -26,7 +26,21 @@ class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Tentar ler a mensagem de erro do corpo da resposta, se disponível
+        const errorBody = await response.text(); // Leitura como texto para evitar erro se não for JSON
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+            const errorJson = JSON.parse(errorBody);
+            errorMessage = errorJson.message || errorMessage;
+        } catch (e) {
+            // Não é JSON, usar o erro padrão
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Se a resposta for 204 No Content, ou se o cabeçalho content-length for 0, retorna null
+      if (response.status === 204 || response.headers.get('content-length') === '0') {
+          return null;
       }
 
       return await response.json();
@@ -90,7 +104,7 @@ class ApiService {
       participante
     );
   }
-
+  
   static async getRelatorio() {
     return this.get(CONFIG.ENDPOINTS.RELATORIO);
   }
