@@ -10,16 +10,18 @@
 
 // Função auxiliar para obter a data e hora atuais formatadas (DD/MM/AAAA HH:MM)
 std::string getCurrentDateTimeFormatted() {
+    // Obtém o tempo atual do sistema
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    std::tm* p_tm = std::localtime(&now_c); // Use localtime para o fuso horário local (Recife)
+    std::tm* p_tm = std::localtime(&now_c); // Converte para o horário local
 
+    // Formata a data e hora como string
     std::ostringstream ss;
     ss << std::put_time(p_tm, "%d/%m/%Y %H:%M");
     return ss.str();
 }
 
-// Adapte compareDates para usar o formato completo DD/MM/AAAA HH:MM
+// Função para comparar duas datas e horas no formato DD/MM/AAAA HH:MM
 // Retorna -1 se dt1 < dt2, 0 se dt1 == dt2, 1 se dt1 > dt2
 int compareDates(const std::string& date1_str, const std::string& time1_str,
                  const std::string& date2_str, const std::string& time2_str) {
@@ -27,33 +29,36 @@ int compareDates(const std::string& date1_str, const std::string& time1_str,
     std::istringstream ss1(date1_str + " " + time1_str);
     std::istringstream ss2(date2_str + " " + time2_str);
 
+    // Faz o parsing das datas e horas
     ss1 >> std::get_time(&tm1, "%d/%m/%Y %H:%M");
     ss2 >> std::get_time(&tm2, "%d/%m/%Y %H:%M");
 
     if (ss1.fail() || ss2.fail()) {
-        // Indica falha no parsing, o que pode ser um problema de formato
-        // Para comparação, pode-se lançar um erro ou retornar um valor que indique ambiguidade
-        // Por enquanto, retorna 0 (igual) para evitar crash, mas idealmente isso seria tratado como erro de dados.
+        // Falha no parsing, retorna 0 (igual) para evitar crash
         return 0;
     }
 
+    // Converte para time_t para comparação
     std::time_t time1_t = std::mktime(&tm1);
     std::time_t time2_t = std::mktime(&tm2);
 
     if (time1_t == static_cast<std::time_t>(-1) || time2_t == static_cast<std::time_t>(-1)) {
-        // Erro na conversão para time_t (data/hora inválida)
+        // Erro na conversão para time_t
         return 0;
     }
 
-    if (time1_t < time2_t) return -1; // dt1 é anterior a dt2
-    if (time1_t > time2_t) return 1;  // dt1 é posterior a dt2
-    return 0;                         // dt1 é igual a dt2
+    // Compara os valores
+    if (time1_t < time2_t) return -1;
+    if (time1_t > time2_t) return 1;
+    return 0;
 }
 
+// Construtor: inicializa o próximo ID e carrega eventos do arquivo
 EventManager::EventManager() : nextEventId(1) {
     loadEventsFromFile();
 }
 
+// Destrutor: libera memória dos eventos
 EventManager::~EventManager() {
     for (Event* ev : events) {
         delete ev;
@@ -61,6 +66,7 @@ EventManager::~EventManager() {
     events.clear();
 }
 
+// Busca evento pelo ID (não const)
 Event* EventManager::findEventById(int id) {
     for (Event* ev : events) {
         if (ev->getId() == id) {
@@ -70,6 +76,7 @@ Event* EventManager::findEventById(int id) {
     return nullptr;
 }
 
+// Busca evento pelo ID (const)
 const Event* EventManager::findEventById(int id) const {
     for (const Event* ev : events) {
         if (ev->getId() == id) {
@@ -79,34 +86,35 @@ const Event* EventManager::findEventById(int id) const {
     return nullptr;
 }
 
+// Adiciona um novo evento ao sistema
 json EventManager::addEvent(const std::string& name, const std::string& date,
                             const std::string& time, const std::string& location,
                             const std::string& description) {
-    // 1. Crie um evento temporário para validação (sem ID real ainda)
+    // Cria um evento temporário para validação
     Event tempEvent(0, name, date, time, location, description);
-    tempEvent.setMaxCapacity(100); // Defina valores padrão se a API não os fornecer
+    tempEvent.setMaxCapacity(100); // Valor padrão
     tempEvent.setPrice(0.0);
     tempEvent.setCategory("General");
 
-    // 2. Validação da entidade Event, passando 'true' pois é uma CRIAÇÃO
+    // Valida o evento (lança exceção se inválido)
     try {
-        tempEvent.validate(true); // Lançará std::invalid_argument se algo estiver errado
+        tempEvent.validate(true);
     } catch (const std::invalid_argument& e) {
         throw std::runtime_error("Erro de validação do novo evento: " + std::string(e.what()));
     }
 
-    // 3. Se a validação passou, crie o evento real com o próximo ID
+    // Cria o evento real com ID sequencial
     Event* newEvent = new Event(nextEventId, name, date, time, location, description);
-    // Copia os outros atributos validados do tempEvent ou define padrões
     newEvent->setMaxCapacity(tempEvent.getMaxCapacity());
     newEvent->setPrice(tempEvent.getPrice());
     newEvent->setCategory(tempEvent.getCategory());
-    newEvent->activateEvent(); // Novos eventos são ativos por padrão
+    newEvent->activateEvent(); // Evento ativo por padrão
 
     events.push_back(newEvent);
     nextEventId++;
-    saveEventsToFile(); // Salva após adição bem-sucedida
+    saveEventsToFile(); // Salva após adicionar
 
+    // Monta JSON de retorno
     json eventJson;
     eventJson["id"] = newEvent->getId();
     eventJson["nome"] = newEvent->getName();
@@ -118,12 +126,13 @@ json EventManager::addEvent(const std::string& name, const std::string& date,
     return eventJson;
 }
 
+// Busca um participante em um evento pelo ID
 json EventManager::getParticipantInEvent(int eventId, int participantId) const {
     const Event* event = findEventById(eventId);
     if (event) {
         const Participant* p = event->getParticipant(participantId);
         if (p) {
-            // Se o participante for encontrado, cria e retorna o JSON
+            // Participante encontrado, retorna JSON
             json pJson;
             pJson["id"] = p->getId();
             pJson["nome"] = p->getName();
@@ -132,10 +141,11 @@ json EventManager::getParticipantInEvent(int eventId, int participantId) const {
             return pJson;
         }
     }
-    // Se o evento ou o participante não forem encontrados, lança uma exceção
+    // Evento ou participante não encontrado
     throw std::runtime_error("Evento ou Participante não encontrado.");
 }
 
+// Retorna referência constante para evento pelo ID (lança exceção se não encontrado)
 const Event& EventManager::getEventById(int id) const {
     const Event* event = findEventById(id);
     if (!event) {
@@ -144,6 +154,7 @@ const Event& EventManager::getEventById(int id) const {
     return *event;
 }
 
+// Retorna referência para evento pelo ID (lança exceção se não encontrado)
 Event& EventManager::getEventById(int id) {
     Event* event = findEventById(id);
     if (!event) {
@@ -152,35 +163,36 @@ Event& EventManager::getEventById(int id) {
     return *event;
 }
 
+// Retorna todos os eventos
 const std::vector<Event*>& EventManager::getAllEvents() const {
     return events;
 }
 
+// Atualiza os dados de um evento existente
 bool EventManager::updateEvent(int id, const std::string& name, const std::string& date,
                                const std::string& time, const std::string& location,
                                const std::string& description) {
     Event* eventToUpdate = findEventById(id);
     if (eventToUpdate) {
-        // Crie uma cópia temporária do evento original para restaurar em caso de falha
-        // ou use setters e chame validate antes de salvar.
-        // A abordagem de usar setters e validar é mais simples aqui.
+        // Salva dados originais para possível reversão
         std::string original_name = eventToUpdate->getName();
         std::string original_date = eventToUpdate->getDate();
         std::string original_time = eventToUpdate->getTime();
         std::string original_location = eventToUpdate->getLocation();
         std::string original_description = eventToUpdate->getDescription();
 
+        // Atualiza os dados
         eventToUpdate->setName(name);
         eventToUpdate->setDate(date);
         eventToUpdate->setTime(time);
         eventToUpdate->setLocation(location);
         eventToUpdate->setDescription(description);
 
-        // Validação da entidade Event, passando 'false' pois é uma ATUALIZAÇÃO
+        // Valida o evento atualizado
         try {
-            eventToUpdate->validate(false); // Permite datas passadas para atualização
+            eventToUpdate->validate(false); // Permite datas passadas
         } catch (const std::invalid_argument& e) {
-            // Reverter as alterações para o estado original antes de lançar o erro
+            // Reverte alterações em caso de erro
             eventToUpdate->setName(original_name);
             eventToUpdate->setDate(original_date);
             eventToUpdate->setTime(original_time);
@@ -189,12 +201,13 @@ bool EventManager::updateEvent(int id, const std::string& name, const std::strin
             throw std::runtime_error("Erro de validação ao atualizar evento: " + std::string(e.what()));
         }
 
-        saveEventsToFile(); // Salva após validação bem-sucedida
+        saveEventsToFile(); // Salva após sucesso
         return true;
     }
     return false; // Evento não encontrado
 }
 
+// Remove um evento pelo ID
 bool EventManager::deleteEvent(int id) {
     auto it = std::remove_if(events.begin(), events.end(),
                              [id](Event* ev) { return ev->getId() == id; });
@@ -207,31 +220,32 @@ bool EventManager::deleteEvent(int id) {
     return false;
 }
 
+// Adiciona um participante a um evento
 json EventManager::addParticipantToEvent(int eventId, const std::string& name,
                                          const std::string& email, const std::string& contact) {
     Event* event = findEventById(eventId);
     if (event) {
-        // 1. Validação de regras de negócio antes de criar o participante
+        // Verifica se é possível registrar
         if (!event->canRegister()) {
             throw std::runtime_error("Não é possível registrar participantes neste evento. Ele pode estar inativo ou lotado.");
         }
 
-        // 2. Crie um participante temporário e valide
-        Participant tempParticipant(0, name, email, contact); // ID 0 é um placeholder
+        // Cria participante temporário e valida
+        Participant tempParticipant(0, name, email, contact);
         try {
-            tempParticipant.validate(); // Validação da entidade Person/Participant
+            tempParticipant.validate();
         } catch (const std::invalid_argument& e) {
             throw std::runtime_error("Erro de validação do participante: " + std::string(e.what()));
         }
 
-        // 3. Verifique se o participante já está registrado no evento (ex: pelo email)
+        // Verifica se já existe participante com o mesmo email
         for (const auto& p : event->getAllParticipants()) {
             if (p->getEmail() == email) {
                 throw std::runtime_error("Um participante com este email já está registrado neste evento.");
             }
         }
 
-        // 4. Se tudo validado, adicione o participante
+        // Adiciona participante ao evento
         Participant* newParticipant = event->addParticipant(name, email, contact);
         saveEventsToFile();
         json participantJson;
@@ -244,6 +258,7 @@ json EventManager::addParticipantToEvent(int eventId, const std::string& name,
     throw std::runtime_error("Evento com ID " + std::to_string(eventId) + " não encontrado para adicionar participante.");
 }
 
+// Retorna todos os participantes de um evento
 json EventManager::getParticipantsForEvent(int eventId) const {
     const Event* event = findEventById(eventId);
     if (event) {
@@ -261,6 +276,7 @@ json EventManager::getParticipantsForEvent(int eventId) const {
     throw std::runtime_error("Evento com ID " + std::to_string(eventId) + " não encontrado para listar participantes.");
 }
 
+// Atualiza os dados de um participante em um evento
 bool EventManager::updateParticipantInEvent(int eventId, int participantId,
                                             const std::string& newName,
                                             const std::string& newEmail,
@@ -269,30 +285,31 @@ bool EventManager::updateParticipantInEvent(int eventId, int participantId,
     if (event) {
         Participant* participantToUpdate = event->getParticipant(participantId);
         if (participantToUpdate) {
-            // Salva os dados originais para possível reversão
+            // Salva dados originais para reversão
             std::string original_name = participantToUpdate->getName();
             std::string original_email = participantToUpdate->getEmail();
             std::string original_contact = participantToUpdate->getContact();
 
-            // Atualiza os dados
+            // Atualiza dados
             participantToUpdate->setName(newName);
             participantToUpdate->setEmail(newEmail);
             participantToUpdate->setContact(newContact);
 
+            // Valida participante atualizado
             try {
-                participantToUpdate->validate(); // Valida o objeto Participant atualizado
+                participantToUpdate->validate();
             } catch (const std::invalid_argument& e) {
-                // Reverte as alterações
+                // Reverte alterações em caso de erro
                 participantToUpdate->setName(original_name);
                 participantToUpdate->setEmail(original_email);
                 participantToUpdate->setContact(original_contact);
                 throw std::runtime_error("Erro de validação ao atualizar participante: " + std::string(e.what()));
             }
 
-            // Verifique unicidade do email para o evento (regra de negócio: email único por evento)
+            // Verifica unicidade do email no evento
             for (const auto& p : event->getAllParticipants()) {
                 if (p->getId() != participantId && p->getEmail() == newEmail) {
-                    // Reverte as alterações antes de lançar o erro
+                    // Reverte alterações antes de lançar erro
                     participantToUpdate->setName(original_name);
                     participantToUpdate->setEmail(original_email);
                     participantToUpdate->setContact(original_contact);
@@ -300,14 +317,15 @@ bool EventManager::updateParticipantInEvent(int eventId, int participantId,
                 }
             }
 
-            saveEventsToFile(); // Salvar após a validação e verificação de unicidade bem-sucedidas
+            saveEventsToFile();
             return true;
         }
-        return false; // Participante não encontrado no evento
+        return false; // Participante não encontrado
     }
     return false; // Evento não encontrado
 }
 
+// Remove um participante de um evento
 bool EventManager::removeParticipantFromEvent(int eventId, int participantId) {
     Event* event = findEventById(eventId);
     if (event) {
@@ -320,6 +338,7 @@ bool EventManager::removeParticipantFromEvent(int eventId, int participantId) {
     return false;
 }
 
+// Salva todos os eventos e participantes no arquivo "eventos.txt"
 void EventManager::saveEventsToFile() {
     std::ofstream file("eventos.txt");
     if (!file.is_open()) {
@@ -332,11 +351,13 @@ void EventManager::saveEventsToFile() {
     file.close();
 }
 
+// Carrega eventos e participantes do arquivo "eventos.txt"
 void EventManager::loadEventsFromFile() {
     std::ifstream file("eventos.txt");
     if (!file.is_open()) {
         return;
     }
+    // Limpa eventos existentes
     for (Event* ev : events) {
         delete ev;
     }
@@ -349,6 +370,7 @@ void EventManager::loadEventsFromFile() {
         std::string type;
         std::getline(ss, type, ',');
         if (type == "EVENT") {
+            // Lê dados do evento
             int id;
             std::string name, date, time, location, description;
             int maxCapacity;
@@ -380,6 +402,7 @@ void EventManager::loadEventsFromFile() {
                 nextEventId = id + 1;
             }
         } else if (type == "PARTICIPANT") {
+            // Lê dados do participante e adiciona ao evento atual
             if (currentEvent) {
                 int p_id;
                 std::string p_name, p_email, p_contact;
@@ -396,24 +419,25 @@ void EventManager::loadEventsFromFile() {
     file.close();
 }
 
+// Retorna estatísticas para o dashboard (total de eventos, participantes, eventos futuros e de hoje)
 json EventManager::getDashboardStats() const {
     json stats;
     stats["totalEventos"] = events.size();
     int totalParticipants = 0;
-    std::string currentDateTimeStr = getCurrentDateTimeFormatted(); // Obtenha data e hora atuais
-    std::string todayDateStr = currentDateTimeStr.substr(0, 10); // Apenas a parte da data
-    std::string currentTimeStr = currentDateTimeStr.substr(11, 5); // Apenas a parte da hora
+    std::string currentDateTimeStr = getCurrentDateTimeFormatted(); // Data e hora atuais
+    std::string todayDateStr = currentDateTimeStr.substr(0, 10); // Data atual
+    std::string currentTimeStr = currentDateTimeStr.substr(11, 5); // Hora atual
 
     int upcomingEvents = 0;
     int eventsToday = 0;
     for (const auto& event : events) {
         totalParticipants += event->getNumParticipants();
         
-        // Compara a data e hora do evento com a data e hora atual
+        // Compara data/hora do evento com a atual
         int comparison = compareDates(event->getDate(), event->getTime(), todayDateStr, currentTimeStr);
-        if (comparison > 0) { // Evento é no futuro
+        if (comparison > 0) { // Evento no futuro
             upcomingEvents++;
-        } else if (comparison == 0) { // Evento é hoje (ou a mesma hora, para ser mais preciso)
+        } else if (comparison == 0) { // Evento hoje
              eventsToday++;
         }
     }

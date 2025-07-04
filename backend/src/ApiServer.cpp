@@ -1,13 +1,18 @@
+// Inclui o cabeçalho da classe ApiServer
 #include "ApiServer.h"
+// Inclui bibliotecas padrão de C++
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
 #include <regex>
+// Inclui a biblioteca de manipulação de JSON (nlohmann/json)
 #include "json/json.hpp"
+// Linka a biblioteca do Windows para sockets
 #pragma comment(lib, "ws2_32.lib")
 
+// Função para extrair o caminho da requisição HTTP
 std::string ApiServer::getRequestPath(const std::string& request) {
     size_t startPos = request.find(" ") + 1;
     size_t endPos = request.find(" ", startPos);
@@ -17,10 +22,12 @@ std::string ApiServer::getRequestPath(const std::string& request) {
     return request.substr(startPos, endPos - startPos);
 }
 
+// Função para extrair um campo de um JSON (não implementada)
 std::string ApiServer::parseJsonField(const std::string& json, const std::string& field) {
     return "";
 }
 
+// Função para decodificar URLs (ex: %20 -> espaço)
 std::string ApiServer::urlDecode(const std::string& str) {
     std::string result;
     for (size_t i = 0; i < str.length(); i++) {
@@ -38,6 +45,7 @@ std::string ApiServer::urlDecode(const std::string& str) {
     return result;
 }
 
+// Função para enviar uma resposta HTTP ao cliente
 void ApiServer::sendResponse(SOCKET clientSocket, const std::string& status,
                              const std::string& contentType, const std::string& content,
                              const std::string& extraHeaders) {
@@ -53,6 +61,7 @@ void ApiServer::sendResponse(SOCKET clientSocket, const std::string& status,
     send(clientSocket, response.c_str(), response.length(), 0);
 }
 
+// Manipula requisição GET para listar eventos
 void ApiServer::handleGetEvents(SOCKET clientSocket) {
     json eventsArray = json::array();
     for (const auto& eventPtr : eventManager.getAllEvents()) {
@@ -69,9 +78,11 @@ void ApiServer::handleGetEvents(SOCKET clientSocket) {
     sendResponse(clientSocket, "200 OK", "application/json", eventsArray.dump());
 }
 
+// Manipula requisição POST para criar um novo evento
 void ApiServer::handlePostEvent(SOCKET clientSocket, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
+        // Validação dos campos obrigatórios
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -98,12 +109,14 @@ void ApiServer::handlePostEvent(SOCKET clientSocket, const std::string& requestB
             return;
         }
 
+        // Extrai os campos do JSON
         std::string name = requestJson.at("nome").get<std::string>();
         std::string date = requestJson.at("data").get<std::string>();
         std::string time = requestJson.at("hora").get<std::string>();
         std::string location = requestJson.at("local").get<std::string>();
         std::string description = requestJson.at("descricao").get<std::string>();
 
+        // Adiciona o evento via EventManager
         json createdEvent = eventManager.addEvent(name, date, time, location, description);
         sendResponse(clientSocket, "201 Created", "application/json", createdEvent.dump());
     } catch (const json::parse_error& e) {
@@ -125,14 +138,17 @@ void ApiServer::handlePostEvent(SOCKET clientSocket, const std::string& requestB
     }
 }
 
+// Manipula requisição GET para estatísticas do dashboard
 void ApiServer::handleGetDashboardStats(SOCKET clientSocket) {
     json stats = eventManager.getDashboardStats();
     sendResponse(clientSocket, "200 OK", "application/json", stats.dump());
 }
 
+// Manipula requisição POST para adicionar participante a um evento
 void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
+        // Validação dos campos obrigatórios
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -147,6 +163,7 @@ void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const st
         std::string email = requestJson.at("email").get<std::string>();
         std::string contact = requestJson.value("contato", "");
 
+        // Adiciona participante via EventManager
         json createdParticipant = eventManager.addParticipantToEvent(eventId, name, email, contact);
         sendResponse(clientSocket, "201 Created", "application/json", createdParticipant.dump());
     } catch (const json::parse_error& e) {
@@ -174,6 +191,7 @@ void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const st
     }
 }
 
+// Manipula requisição GET para listar participantes de um evento
 void ApiServer::handleGetParticipants(SOCKET clientSocket, int eventId) {
     try {
         json participantsArray = eventManager.getParticipantsForEvent(eventId);
@@ -184,6 +202,7 @@ void ApiServer::handleGetParticipants(SOCKET clientSocket, int eventId) {
     }
 }
 
+// Manipula requisição GET para buscar evento por ID
 void ApiServer::handleGetEventById(SOCKET clientSocket, int eventId) {
     try {
         const Event& event = eventManager.getEventById(eventId);
@@ -207,9 +226,11 @@ void ApiServer::handleGetEventById(SOCKET clientSocket, int eventId) {
     }
 }
 
+// Manipula requisição PUT para atualizar evento
 void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
+        // Validação dos campos obrigatórios
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -236,6 +257,7 @@ void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::stri
             return;
         }
 
+        // Extrai campos do JSON
         std::string name = requestJson.at("nome").get<std::string>();
         std::string data = requestJson.at("data").get<std::string>();
         std::string hora = requestJson.at("hora").get<std::string>();
@@ -268,6 +290,7 @@ void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::stri
     }
 }
 
+// Manipula requisição DELETE para remover evento
 void ApiServer::handleDeleteEvent(SOCKET clientSocket, int eventId) {
     try {
         bool deleted = eventManager.deleteEvent(eventId);
@@ -284,6 +307,7 @@ void ApiServer::handleDeleteEvent(SOCKET clientSocket, int eventId) {
     }
 }
 
+// Manipula requisição GET para buscar participante por ID em um evento
 void ApiServer::handleGetParticipantById(SOCKET clientSocket, int eventId, int participantId) {
     try {
         json participantJson = eventManager.getParticipantInEvent(eventId, participantId);
@@ -295,9 +319,11 @@ void ApiServer::handleGetParticipantById(SOCKET clientSocket, int eventId, int p
     }
 }
 
+// Manipula requisição PUT para atualizar participante em um evento
 void ApiServer::handlePutParticipant(SOCKET clientSocket, int eventId, int participantId, const std::string& requestBody) {
     try {
         json requestJson = json::parse(requestBody);
+        // Validação dos campos obrigatórios
         if (!requestJson.contains("nome") || !requestJson["nome"].is_string()) {
             sendResponse(clientSocket, "400 Bad Request", "application/json",
                          "{\"error\":\"Campo 'nome' é obrigatório e deve ser uma string.\"}");
@@ -339,6 +365,7 @@ void ApiServer::handlePutParticipant(SOCKET clientSocket, int eventId, int parti
     }
 }
 
+// Manipula requisição DELETE para remover participante de um evento
 void ApiServer::handleDeleteParticipant(SOCKET clientSocket, int eventId, int participantId) {
     try {
         bool deleted = eventManager.removeParticipantFromEvent(eventId, participantId);
@@ -355,6 +382,7 @@ void ApiServer::handleDeleteParticipant(SOCKET clientSocket, int eventId, int pa
     }
 }
 
+// Construtor da classe ApiServer: inicializa o socket do servidor
 ApiServer::ApiServer(EventManager& manager) : eventManager(manager), serverSocket(INVALID_SOCKET) {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -373,6 +401,7 @@ ApiServer::ApiServer(EventManager& manager) : eventManager(manager), serverSocke
     }
 }
 
+// Destrutor da classe ApiServer: fecha o socket e limpa o Winsock
 ApiServer::~ApiServer() {
     if (serverSocket != INVALID_SOCKET) {
         closesocket(serverSocket);
@@ -380,27 +409,32 @@ ApiServer::~ApiServer() {
     WSACleanup();
 }
 
+// Função principal para iniciar o servidor e tratar as requisições
 void ApiServer::start(int port) {
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(port);
+    // Faz o bind do socket na porta especificada
     if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         std::cerr << "Erro ao fazer bind na porta " << port << ": " << WSAGetLastError() << std::endl;
         closesocket(serverSocket);
         WSACleanup();
         exit(1);
     }
+    // Coloca o socket em modo de escuta
     if (listen(serverSocket, SOMAXCONN) == SOCKET_ERROR) {
         std::cerr << "Erro ao escutar na porta " << port << ": " << WSAGetLastError() << std::endl;
         closesocket(serverSocket);
         WSACleanup();
         exit(1);
     }
+    // Mensagens de inicialização
     std::cout << "🚀 API Server started on port " << port << "..." << std::endl;
     std::cout << "📱 Frontend available at: http://localhost:" << port << "/frontend/" << std::endl;
     std::cout << "🔧 Para parar o servidor, pressione Ctrl+C" << std::endl;
     std::cout << "--------------------------------------------------" << std::endl;
+    // Loop principal do servidor
     while (true) {
         SOCKET clientSocket = accept(serverSocket, NULL, NULL);
         if (clientSocket == INVALID_SOCKET) {
@@ -412,6 +446,7 @@ void ApiServer::start(int port) {
         if (bytesReceived > 0) {
             buffer[bytesReceived] = '\0';
             std::string request(buffer);
+            // Log da requisição recebida
             std::cout << "==================================================" << std::endl;
             std::cout << ">>> REQUISICAO RECEBIDA:" << std::endl;
             std::cout << request.substr(0, std::min((int)request.length(), 400)) << (request.length() > 400 ? "..." : "") << std::endl;
@@ -429,26 +464,32 @@ void ApiServer::start(int port) {
             }
             std::cout << "--> ROUTING: ";
             try {
+                // Rotas de CORS (preflight)
                 if (method == "OPTIONS") {
                     std::cout << "OPTIONS (CORS Preflight)" << std::endl;
                     sendResponse(clientSocket, "204 No Content", "text/plain", "");
                 }
+                // Rota de health check
                 else if (path == "/health") {
                     std::cout << "Route /health" << std::endl;
                     sendResponse(clientSocket, "200 OK", "application/json", "{\"status\":\"ok\",\"message\":\"Server is running!\"}");
                 }
+                // Rota para listar eventos
                 else if (path == "/api/eventos" && method == "GET") {
                     std::cout << "Route /api/eventos (GET)" << std::endl;
                     handleGetEvents(clientSocket);
                 }
+                // Rota para criar evento
                 else if ((path == "/api/eventos" || path == "/api/eventos/") && method == "POST") {
                     std::cout << "Route /api/eventos (POST)" << std::endl;
                     handlePostEvent(clientSocket, requestBody);
                 }
+                // Rota para relatório/dashboard
                 else if (path == "/api/relatorio" && method == "GET") {
                     std::cout << "Route /api/relatorio (GET)" << std::endl;
                     handleGetDashboardStats(clientSocket);
                 }
+                // Rotas para eventos por ID (GET, PUT, DELETE)
                 else if (path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") == std::string::npos) {
                     try {
                         size_t idStart = path.find("/api/eventos/") + 13;
@@ -480,6 +521,7 @@ void ApiServer::start(int port) {
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"ID de Evento fora do intervalo.\"}", "");
                     }
                 }
+                // Rotas para participantes de eventos
                 else if (path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") != std::string::npos) {
                     size_t eventIdStart = path.find("/api/eventos/") + 13;
                     size_t eventIdEnd = path.find("/participantes", eventIdStart);
@@ -500,13 +542,13 @@ void ApiServer::start(int port) {
                                int participantId = std::stoi(path.substr(specific_participant_id_start_pos + 1));
                                std::cout << "Route /api/eventos/" << eventId << "/participantes/" << participantId << " (";
                                
-                               // ESTE BLOCO SERÁ MODIFICADO
+                               // Aqui são tratadas as rotas para participante específico
                                if (method == "PUT") {
                                    // ... código existente para PUT ...
                                } else if (method == "DELETE") {
                                    // ... código existente para DELETE ...
                                
-                               // ADICIONE ESTE BLOCO "ELSE IF"
+                               // Bloco para GET de participante específico
                                } else if (method == "GET") {
                                    std::cout << "GET)" << std::endl;
                                    handleGetParticipantById(clientSocket, eventId, participantId);
@@ -539,6 +581,7 @@ void ApiServer::start(int port) {
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"ID de Evento fora do intervalo.\"}", "");
                     }
                 }
+                // Rotas para arquivos estáticos do frontend
                 else if (path == "/" || path == "/frontend" || path.rfind("/frontend/", 0) == 0) {
                     std::cout << "Static File Route" << std::endl;
                     std::string localFilePath;
@@ -551,6 +594,7 @@ void ApiServer::start(int port) {
                     if (queryPos != std::string::npos) {
                         localFilePath = localFilePath.substr(0, queryPos);
                     }
+                    // Protege contra path traversal
                     if (localFilePath.find("..") != std::string::npos) {
                          sendResponse(clientSocket, "403 Forbidden", "text/html", "<h1>403 Forbidden</h1><p>Acesso negado.</p>");
                          closesocket(clientSocket);
@@ -577,6 +621,7 @@ void ApiServer::start(int port) {
                                      "<h1>404 Not Found</h1><p>O arquivo solicitado '" + localFilePath + "' não foi encontrado.</p>");
                     }
                 }
+                // Rota não encontrada
                 else {
                     std::cout << "404 Not Found (API ou rota não tratada)" << std::endl;
                     sendResponse(clientSocket, "404 Not Found", "application/json",

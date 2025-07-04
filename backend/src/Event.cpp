@@ -7,14 +7,17 @@
 #include <chrono>    // Para std::chrono
 #include <ctime>     // Para std::tm e std::mktime
 
+// Construtor padrão: inicializa os membros com valores padrão
 Event::Event()
     : id(0), name(""), date(""), time(""), location(""), description(""),
       maxCapacity(100), price(0.0), nextParticipantId(1), category("General"), isActive(true) {}
 
+// Construtor com parâmetros principais
 Event::Event(int id, std::string name, std::string date, std::string time, std::string location, std::string description)
     : id(id), name(name), date(date), time(time), location(location), description(description),
       maxCapacity(100), price(0.0), nextParticipantId(1), category("General"), isActive(true) {}
 
+// Destrutor: libera memória dos participantes
 Event::~Event() {
     for (Participant* p : participants) {
         delete p;
@@ -22,42 +25,40 @@ Event::~Event() {
     participants.clear();
 }
 
-// Método de validação com o novo parâmetro `forCreation`
+// Método de validação dos dados do evento
 void Event::validate(bool forCreation) const {
-    // Validação de Nome: Não vazio, comprimento mínimo
+    // Nome não pode ser vazio e deve ter pelo menos 5 caracteres
     if (name.empty()) {
         throw std::invalid_argument("O nome do evento não pode ser vazio.");
     }
     if (name.length() < 5) {
         throw std::invalid_argument("O nome do evento deve ter pelo menos 5 caracteres.");
     }
-    // Validação de Local: Não vazio
+    // Local não pode ser vazio
     if (location.empty()) {
         throw std::invalid_argument("O local do evento não pode ser vazio.");
     }
-    // Validação de Descrição: Não vazia
+    // Descrição não pode ser vazia
     if (description.empty()) {
         throw std::invalid_argument("A descrição do evento não pode ser vazia.");
     }
-
-    // Validação de capacidade e preço (mantidas como antes)
+    // Capacidade máxima deve ser positiva
     if (maxCapacity <= 0) {
         throw std::invalid_argument("A capacidade máxima deve ser um número positivo.");
     }
+    // Preço não pode ser negativo
     if (price < 0) {
         throw std::invalid_argument("O preço não pode ser negativo.");
     }
-
-    // Validação de Data: Formato DD/MM/AAAA válido e data existente
+    // Data deve ser válida
     if (!isValidDate(date)) {
         throw std::invalid_argument("Formato de data inválido ou data inexistente. Use DD/MM/AAAA.");
     }
-    // Validação de Hora: Formato HH:MM válido
+    // Hora deve ser válida
     if (!isValidTime(time)) {
         throw std::invalid_argument("Formato de hora inválido. Use HH:MM.");
     }
-
-    // VALIDAÇÃO CONDICIONAL: Data/Hora no Futuro APENAS para criação de evento
+    // Se for criação, data/hora devem estar no futuro
     if (forCreation) {
         if (!isFutureDateTime(date, time)) {
             throw std::invalid_argument("A data e hora de um novo evento devem ser no futuro.");
@@ -65,29 +66,27 @@ void Event::validate(bool forCreation) const {
     }
 }
 
+// Valida se a data está no formato correto e é uma data existente
 bool Event::isValidDate(const std::string& d) const {
     const std::regex date_regex(R"(^\d{2}/\d{2}/\d{4}$)");
     if (!std::regex_match(d, date_regex)) {
         return false;
     }
-
     int day = std::stoi(d.substr(0, 2));
     int month = std::stoi(d.substr(3, 2));
     int year = std::stoi(d.substr(6, 4));
-
     if (year < 1900 || year > 2100) return false;
     if (month < 1 || month > 12) return false;
-    
     int daysInMonth[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    // Ajusta para ano bissexto
     if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) {
-        daysInMonth[2] = 29; // Ano bissexto
+        daysInMonth[2] = 29;
     }
-
     if (day < 1 || day > daysInMonth[month]) return false;
-
     return true;
 }
 
+// Valida se a hora está no formato correto e é uma hora válida
 bool Event::isValidTime(const std::string& t) const {
     const std::regex time_regex(R"(^\d{2}:\d{2}$)");
     if (!std::regex_match(t, time_regex)) {
@@ -101,49 +100,31 @@ bool Event::isValidTime(const std::string& t) const {
     return true;
 }
 
+// Verifica se a data/hora informada está no futuro em relação ao sistema
 bool Event::isFutureDateTime(const std::string& d, const std::string& t) const {
-    std::tm event_tm = {}; // Estrutura para a data/hora do evento
+    std::tm event_tm = {};
     std::istringstream ss(d + " " + t);
-
-    // 1. Parseia a string de data/hora do evento para a estrutura tm.
-    //    Isso preenche os campos numéricos (ano, mês, dia, hora, minuto).
-    //    NÃO LIDA COM FUSO HORÁRIO. Apenas interpreta os números.
     ss >> std::get_time(&event_tm, "%d/%m/%Y %H:%M");
-
     if (ss.fail()) {
-        return false; // Falha no parsing da string (ex: formato inválido)
-    }
-
-    // 2. Obtém a data e hora ATUAL do sistema, convertida para a estrutura tm
-    //    NO FUSO HORÁRIO LOCAL DO SERVIDOR.
-    std::time_t now_time_t = std::time(nullptr); // Obtém o tempo atual em segundos UTC
-    std::tm now_tm; // Estrutura para a data/hora atual
-
-    // Usa a função segura e thread-safe para converter time_t para tm local
-    #ifdef _WIN32
-        localtime_s(&now_tm, &now_time_t); // Windows: usa localtime_s
-    #else
-        localtime_r(&now_time_t, &now_tm); // Linux/Unix: usa localtime_r
-    #endif
-
-    // 3. Converte AMBAS as estruturas tm (evento e agora) para time_t (segundos desde a Epoch).
-    //    `std::mktime` interpreta a estrutura `tm` como estando NO FUSO HORÁRIO LOCAL
-    //    DO SISTEMA e faz as conversões necessárias para segundos UTC.
-    //    Isso garante que estamos comparando "maçãs com maçãs".
-    std::time_t event_epoch = std::mktime(&event_tm);
-    std::time_t now_epoch = std::mktime(&now_tm);
-
-    if (event_epoch == static_cast<std::time_t>(-1) || now_epoch == static_cast<std::time_t>(-1)) {
-        // Erro na conversão para time_t (ex: data inválida ou fora do intervalo)
         return false;
     }
-
-    // 4. Compara os valores de time_t (que agora são consistentes).
-    //    Adiciona um pequeno buffer (5 segundos) para evitar falsos negativos
-    //    se o evento for exatamente no momento atual ou um segundo no futuro/passado.
-    return event_epoch > now_epoch + 5; // Evento é estritamente no futuro (com buffer)
+    std::time_t now_time_t = std::time(nullptr);
+    std::tm now_tm;
+    #ifdef _WIN32
+        localtime_s(&now_tm, &now_time_t);
+    #else
+        localtime_r(&now_time_t, &now_tm);
+    #endif
+    std::time_t event_epoch = std::mktime(&event_tm);
+    std::time_t now_epoch = std::mktime(&now_tm);
+    if (event_epoch == static_cast<std::time_t>(-1) || now_epoch == static_cast<std::time_t>(-1)) {
+        return false;
+    }
+    // Adiciona buffer de 5 segundos para evitar falsos negativos
+    return event_epoch > now_epoch + 5;
 }
 
+// Métodos getters
 int Event::getId() const { return id; }
 std::string Event::getName() const { return name; }
 std::string Event::getDate() const { return date; }
@@ -156,6 +137,7 @@ int Event::getNumParticipants() const { return participants.size(); }
 std::string Event::getCategory() const { return category; }
 bool Event::isActiveEvent() const { return isActive; }
 
+// Métodos setters
 void Event::setId(int id) { this->id = id; }
 void Event::setName(std::string name) { this->name = name; }
 void Event::setDate(std::string date) { this->date = date; }
@@ -168,6 +150,7 @@ void Event::setCategory(std::string cat) { this->category = cat; }
 void Event::activateEvent() { isActive = true; }
 void Event::deactivateEvent() { isActive = false; }
 
+// Atualiza os dados principais do evento
 void Event::updateEvent(std::string name, std::string date, std::string time, std::string location, std::string description) {
     setName(name);
     setDate(date);
@@ -176,6 +159,7 @@ void Event::updateEvent(std::string name, std::string date, std::string time, st
     setDescription(description);
 }
 
+// Salva os dados do evento e dos participantes em arquivo
 void Event::saveEvent(std::ofstream &file) {
     file << "EVENT," << id << "," << name << "," << date << ","
           << time << "," << location << "," << description << ","
@@ -188,6 +172,7 @@ void Event::saveEvent(std::ofstream &file) {
     }
 }
 
+// Adiciona participante (objeto já criado)
 void Event::addParticipant(Participant* p) {
     if (p->getId() == 0) {
         p->setId(nextParticipantId++);
@@ -199,6 +184,7 @@ void Event::addParticipant(Participant* p) {
     participants.push_back(p);
 }
 
+// Cria e adiciona um novo participante
 Participant* Event::addParticipant(std::string name, std::string email, std::string contact) {
     Participant* newParticipant = new Participant(nextParticipantId, name, email, contact);
     participants.push_back(newParticipant);
@@ -206,6 +192,7 @@ Participant* Event::addParticipant(std::string name, std::string email, std::str
     return newParticipant;
 }
 
+// Busca participante pelo ID
 Participant* Event::getParticipant(int participantId) const {
     for (Participant* p : participants) {
         if (p->getId() == participantId) {
@@ -215,10 +202,12 @@ Participant* Event::getParticipant(int participantId) const {
     return nullptr;
 }
 
+// Retorna todos os participantes
 const std::vector<Participant*>& Event::getAllParticipants() const {
     return participants;
 }
 
+// Atualiza dados de um participante
 bool Event::updateParticipant(int participantId, const std::string& newName, const std::string& newEmail, const std::string& newContact) {
     for (Participant* p : participants) {
         if (p->getId() == participantId) {
@@ -231,6 +220,7 @@ bool Event::updateParticipant(int participantId, const std::string& newName, con
     return false;
 }
 
+// Remove participante pelo ID
 bool Event::removeParticipant(int participantId) {
     for (auto it = participants.begin(); it != participants.end(); ++it) {
         if ((*it)->getId() == participantId) {
@@ -242,14 +232,17 @@ bool Event::removeParticipant(int participantId) {
     return false;
 }
 
+// Calcula o preço do evento (pode ser customizado)
 double Event::calculatePrice() const {
     return price;
 }
 
+// Verifica se é possível registrar mais participantes
 bool Event::canRegister() const {
     return isActive && (getNumParticipants() < maxCapacity);
 }
 
+// Retorna uma string com resumo dos dados do evento
 std::string Event::toString() const {
     std::stringstream ss;
     ss << "ID: " << id << ", Name: " << name << ", Date: " << date
@@ -262,6 +255,7 @@ std::string Event::toString() const {
     return ss.str();
 }
 
+// Exibe detalhes do evento no console
 void Event::displayDetails() const {
     std::cout << "--- Event Details ---" << std::endl;
     std::cout << "ID: " << id << std::endl;
