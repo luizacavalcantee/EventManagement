@@ -102,24 +102,46 @@ bool Event::isValidTime(const std::string& t) const {
 }
 
 bool Event::isFutureDateTime(const std::string& d, const std::string& t) const {
-    std::tm event_tm = {};
+    std::tm event_tm = {}; // Estrutura para a data/hora do evento
     std::istringstream ss(d + " " + t);
 
+    // 1. Parseia a string de data/hora do evento para a estrutura tm.
+    //    Isso preenche os campos numéricos (ano, mês, dia, hora, minuto).
+    //    NÃO LIDA COM FUSO HORÁRIO. Apenas interpreta os números.
     ss >> std::get_time(&event_tm, "%d/%m/%Y %H:%M");
 
     if (ss.fail()) {
-        return false; // Falha no parsing
+        return false; // Falha no parsing da string (ex: formato inválido)
     }
 
-    std::time_t event_time_t = std::mktime(&event_tm);
-    std::time_t current_time_t = std::time(nullptr);
+    // 2. Obtém a data e hora ATUAL do sistema, convertida para a estrutura tm
+    //    NO FUSO HORÁRIO LOCAL DO SERVIDOR.
+    std::time_t now_time_t = std::time(nullptr); // Obtém o tempo atual em segundos UTC
+    std::tm now_tm; // Estrutura para a data/hora atual
 
-    if (event_time_t == static_cast<std::time_t>(-1)) {
-        return false; // Erro de conversão de data/hora
+    // Usa a função segura e thread-safe para converter time_t para tm local
+    #ifdef _WIN32
+        localtime_s(&now_tm, &now_time_t); // Windows: usa localtime_s
+    #else
+        localtime_r(&now_time_t, &now_tm); // Linux/Unix: usa localtime_r
+    #endif
+
+    // 3. Converte AMBAS as estruturas tm (evento e agora) para time_t (segundos desde a Epoch).
+    //    `std::mktime` interpreta a estrutura `tm` como estando NO FUSO HORÁRIO LOCAL
+    //    DO SISTEMA e faz as conversões necessárias para segundos UTC.
+    //    Isso garante que estamos comparando "maçãs com maçãs".
+    std::time_t event_epoch = std::mktime(&event_tm);
+    std::time_t now_epoch = std::mktime(&now_tm);
+
+    if (event_epoch == static_cast<std::time_t>(-1) || now_epoch == static_cast<std::time_t>(-1)) {
+        // Erro na conversão para time_t (ex: data inválida ou fora do intervalo)
+        return false;
     }
 
-    // Adiciona uma pequena margem (ex: 5 segundos) para considerar a precisão do sistema
-    return event_time_t > current_time_t + 5;
+    // 4. Compara os valores de time_t (que agora são consistentes).
+    //    Adiciona um pequeno buffer (5 segundos) para evitar falsos negativos
+    //    se o evento for exatamente no momento atual ou um segundo no futuro/passado.
+    return event_epoch > now_epoch + 5; // Evento é estritamente no futuro (com buffer)
 }
 
 int Event::getId() const { return id; }

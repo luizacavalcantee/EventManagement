@@ -1,28 +1,43 @@
 class DateUtils {
     static parseDate(dateString) {
-        if (!dateString) return null;
-        if (dateString.includes('/')) {
-            const parts = dateString.split('/');
-            if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
-                const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-                if (!isNaN(date.getTime())) return date;
-            }
-        } 
-        if (dateString.includes('-')) {
+        if (!dateString) {
+            return null;
+        }
+
+        if (dateString.includes('-') && dateString.split('-').length === 3) {
             const parts = dateString.split('-');
-            if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
-                const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-                if (!isNaN(date.getTime())) return date;
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            const date = new Date(year, month, day);
+            if (!isNaN(date.getTime())) {
+                return date;
             }
         }
+
+        if (dateString.includes('/') && dateString.split('/').length === 3) {
+            const parts = dateString.split('/');
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const year = parseInt(parts[2]);
+            const date = new Date(year, month, day);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
         const date = new Date(dateString);
-        if (!isNaN(date.getTime())) return date;
+        if (!isNaN(date.getTime())) {
+            return date;
+        }
         return null;
     }
 
     static formatDate(dateString, locale = 'pt-BR') {
         const date = DateUtils.parseDate(dateString);
-        if (!date) return '--/--/----';
+        if (!date) {
+            return '--/--/----';
+        }
         return date.toLocaleDateString(locale);
     }
 
