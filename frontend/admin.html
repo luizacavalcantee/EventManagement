@@ -9,7 +9,6 @@
     <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="#">
@@ -25,7 +24,6 @@
     </nav>
 
     <div class="container mt-4">
-        <!-- Dashboard -->
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="card bg-primary text-white">
@@ -89,7 +87,6 @@
             </div>
         </div>
 
-        <!-- Formulário de Evento -->
         <div class="row">
             <div class="col-md-4">
                 <div class="card">
@@ -100,7 +97,7 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <form id="eventoForm">
+                        <form id="eventForm">
                             <div class="mb-3">
                                 <label for="nome" class="form-label">Nome do Evento *</label>
                                 <input type="text" class="form-control" id="nome" required>
@@ -134,7 +131,6 @@
                 </div>
             </div>
 
-            <!-- Lista de Eventos -->
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -159,7 +155,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="eventosLista">
-                                    <!-- Eventos serão carregados aqui -->
                                 </tbody>
                             </table>
                         </div>
@@ -168,7 +163,6 @@
             </div>
         </div>
 
-        <!-- Modal de Participantes -->
         <div class="modal fade" id="participantesModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -180,7 +174,6 @@
                     </div>
                     <div class="modal-body">
                         <div id="participantesList">
-                            <!-- Participantes serão carregados aqui -->
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -191,7 +184,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/utils/dateUtils.js"></script>

@@ -1,92 +1,113 @@
-/**
- * Utilitários para manipulação de datas
- */
 class DateUtils {
-    /**
-     * Formata uma data para o formato brasileiro
-     * @param {string} dateString - String da data
-     * @returns {string} Data formatada
-     */
-    static formatDate(dateString) {
-        if (!dateString) return '--/--/----';
-        
+    static parseDate(dateString) {
+        if (!dateString) {
+            return null;
+        }
+
+        if (dateString.includes('-') && dateString.split('-').length === 3) {
+            const parts = dateString.split('-');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            const date = new Date(year, month, day);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
+        if (dateString.includes('/') && dateString.split('/').length === 3) {
+            const parts = dateString.split('/');
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const year = parseInt(parts[2]);
+            const date = new Date(year, month, day);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
         const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '--/--/----';
-        
-        return date.toLocaleDateString('pt-BR');
+        if (!isNaN(date.getTime())) {
+            return date;
+        }
+        return null;
     }
 
-    /**
-     * Formata uma data e hora
-     * @param {string} dateString - String da data
-     * @param {string} timeString - String da hora
-     * @returns {string} Data e hora formatadas
-     */
-    static formatDateTime(dateString, timeString) {
-        const date = this.formatDate(dateString);
+    static formatDate(dateString, locale = 'pt-BR') {
+        const date = DateUtils.parseDate(dateString);
+        if (!date) {
+            return '--/--/----';
+        }
+        return date.toLocaleDateString(locale);
+    }
+
+    static formatDateForInput(dateString) {
+        const date = DateUtils.parseDate(dateString);
+        if (!date) return '';
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    static formatDateTime(dateString, timeString, locale = 'pt-BR') {
+        const date = this.formatDate(dateString, locale);
         const time = timeString || '--:--';
         return `${date} às ${time}`;
     }
 
-    /**
-     * Verifica se uma data é hoje
-     * @param {string} dateString - String da data
-     * @returns {boolean} True se for hoje
-     */
     static isToday(dateString) {
-        const date = new Date(dateString);
+        const date = DateUtils.parseDate(dateString);
+        if (!date) return false;
         const today = new Date();
-        return date.toDateString() === today.toDateString();
+        date.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        return date.getTime() === today.getTime();
     }
 
-    /**
-     * Verifica se uma data é próxima (próximos 7 dias)
-     * @param {string} dateString - String da data
-     * @returns {boolean} True se for próxima
-     */
+    static isFuture(dateString) {
+        const date = DateUtils.parseDate(dateString);
+        if (!date) return false;
+        const today = new Date();
+        date.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        return date.getTime() > today.getTime();
+    }
+
     static isUpcoming(dateString) {
-        const date = new Date(dateString);
+        const date = DateUtils.parseDate(dateString);
+        if (!date) return false;
         const today = new Date();
         const nextWeek = new Date();
         nextWeek.setDate(today.getDate() + 7);
-        
-        return date >= today && date <= nextWeek;
+        date.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        nextWeek.setHours(0, 0, 0, 0);
+        return date.getTime() >= today.getTime() && date.getTime() <= nextWeek.getTime();
     }
 
-    /**
-     * Verifica se uma data já passou
-     * @param {string} dateString - String da data
-     * @returns {boolean} True se já passou
-     */
     static isPast(dateString) {
-        const date = new Date(dateString);
+        const date = DateUtils.parseDate(dateString);
+        if (!date) return false;
         const today = new Date();
-        return date < today;
+        date.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        return date.getTime() < today.getTime();
     }
 
-    /**
-     * Obtém a data mínima para inputs (hoje)
-     * @returns {string} Data no formato YYYY-MM-DD
-     */
     static getMinDate() {
         return new Date().toISOString().split('T')[0];
     }
 
-    /**
-     * Calcula a diferença em dias entre duas datas
-     * @param {string} date1 - Primeira data
-     * @param {string} date2 - Segunda data
-     * @returns {number} Diferença em dias
-     */
-    static getDaysDifference(date1, date2) {
-        const d1 = new Date(date1);
-        const d2 = new Date(date2);
-        const diffTime = Math.abs(d2 - d1);
+    static getDaysDifference(date1String, date2String) {
+        const d1 = DateUtils.parseDate(date1String);
+        const d2 = DateUtils.parseDate(date2String);
+        if (!d1 || !d2) return NaN;
+        const diffTime = Math.abs(d2.getTime() - d1.getTime());
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 }
 
-// Exportar utilitário
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = DateUtils;
-} 
+}

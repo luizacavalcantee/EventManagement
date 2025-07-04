@@ -1,11 +1,4 @@
-/**
- * Componente Dashboard - Gerencia as estatísticas e cards informativos
- */
 class Dashboard {
-    /**
-     * Atualiza a interface do dashboard com dados do relatório
-     * @param {Object} relatorio - Objeto com os dados do servidor
-     */
     atualizarDashboard(relatorio) {
         if (!relatorio) {
             console.warn('Dashboard: Relatório nulo ou indefinido recebido.');
@@ -19,7 +12,6 @@ class Dashboard {
     }
 }
 
-// Exportar componente
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Dashboard;
-} 
+}
