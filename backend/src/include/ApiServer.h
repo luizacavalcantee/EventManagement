@@ -17,10 +17,10 @@ private:
     EventManager& eventManager;
 
     std::string getRequestPath(const std::string& request);
-    std::string parseJsonField(const std::string& json, const std::string& field);
+    std::string parseJsonField(const std::string& json, const std::string& field); // Este método não é mais usado com nlohmann/json
     std::string urlDecode(const std::string& str);
-    void sendResponse(SOCKET clientSocket, const std::string& status, 
-                      const std::string& contentType, const std::string& content, 
+    void sendResponse(SOCKET clientSocket, const std::string& status,
+                      const std::string& contentType, const std::string& content,
                       const std::string& extraHeaders = "");
     void handleGetEvents(SOCKET clientSocket);
     void handlePostEvent(SOCKET clientSocket, const std::string& requestBody);

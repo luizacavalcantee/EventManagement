@@ -1,30 +1,20 @@
-#ifndef PARTICIPANTE_H
-#define PARTICIPANTE_H
+#ifndef PARTICIPANT_H
+#define PARTICIPANT_H
 
-#include "Pessoa.h"
+#include <string>
+#include "Person.h"
 
-// Classe Participante herda de Pessoa
-class Participante : public Pessoa {
+class Participant : public Person {
 private:
-    std::string tipoIngresso; // VIP, Normal, Estudante, etc.
-    bool presencaConfirmada;
+    int id;
 
 public:
-    // Construtores
-    Participante();
-    Participante(std::string n, std::string e, std::string c = "");
-    Participante(std::string n, std::string e, std::string c, std::string tipo);
-    
-    // Sobrescrevendo métodos virtuais da classe base
+    Participant();
+    Participant(int id, std::string name, std::string email, std::string contact = "");
     virtual std::string toString() const override;
-    virtual std::string getTipo() const override;
-    
-    // Métodos específicos da classe Participante
-    std::string getTipoIngresso() const;
-    bool getPresencaConfirmada() const;
-    void setTipoIngresso(std::string tipo);
-    void confirmarPresenca();
-    void cancelarPresenca();
+    int getId() const;
+    void setId(int newId);
+    // Herda validate() de Person, não precisa de override a menos que adicione regras específicas de participante
 };
 
-#endif 
+#endif // PARTICIPANT_H

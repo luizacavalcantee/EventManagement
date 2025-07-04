@@ -1,55 +1,79 @@
-#ifndef EVENTO_H
-#define EVENTO_H
+#ifndef EVENT_H
+#define EVENT_H
 
 #include <string>
 #include <vector>
-#include "EventoBase.h"
-#include "Participante.h"
-#include "Organizador.h"
+#include <fstream>
+#include <stdexcept> // Inclua para std::invalid_argument
+#include "Participant.h"
 
-// Classe Evento herda de EventoBase
-class Evento : public EventoBase {
+class Event {
 private:
-    std::vector<Participante*> participantes;
-    std::vector<Organizador*> organizadores;
-    std::string categoria; // Conferência, Workshop, Palestra, etc.
-    bool eventoAtivo;
+    int id;
+    std::string name;
+    std::string date;
+    std::string time;
+    std::string location;
+    std::string description;
+    int maxCapacity;
+    double price;
+    std::vector<Participant*> participants;
+    int nextParticipantId;
+    std::string category;
+    bool isActive;
 
 public:
-    // Construtores
-    Evento();
-    Evento(std::string n, std::string d, std::string h, std::string l, std::string desc);
-    Evento(int id, std::string n, std::string d, std::string h, std::string l, std::string desc);
-    
-    // Destrutor
-    ~Evento();
-    
-    // Sobrescrevendo métodos virtuais da classe base
-    virtual std::string getTipoEvento() const override;
-    virtual double calcularPreco() const override;
-    virtual bool podeInscricao() const override;
-    virtual std::string toString() const override;
-    virtual void exibirDetalhes() const override;
-    
-    // Métodos específicos da classe Evento
-    void adicionarParticipante(Participante* p);
-    void adicionarOrganizador(Organizador* o);
-    void removerParticipante(int index);
-    void removerOrganizador(int index);
-    
-    int getNumParticipantes() const;
-    int getNumOrganizadores() const;
-    Participante* getParticipante(int i) const;
-    Organizador* getOrganizador(int i) const;
-    
-    std::string getCategoria() const;
-    bool getEventoAtivo() const;
-    void setCategoria(std::string cat);
-    void ativarEvento();
-    void desativarEvento();
-    
-    void atualizarEvento(std::string n, std::string d, std::string h, std::string l, std::string desc);
-    void salvarEvento(std::ofstream &arquivo);
+    Event();
+    Event(int id, std::string name, std::string date, std::string time, std::string location, std::string description);
+    ~Event();
+
+    // Método de validação com parâmetro para indicar se é uma criação (true por padrão)
+    void validate(bool forCreation = true) const;
+
+    // Métodos de validação auxiliares (para uso interno ou externo)
+    bool isValidDate(const std::string& d) const;
+    bool isValidTime(const std::string& t) const;
+    bool isFutureDateTime(const std::string& d, const std::string& t) const;
+
+    int getId() const;
+    std::string getName() const;
+    std::string getDate() const;
+    std::string getTime() const;
+    std::string getLocation() const;
+    std::string getDescription() const;
+    int getMaxCapacity() const;
+    double getPrice() const;
+    int getNumParticipants() const;
+    std::string getCategory() const;
+    bool isActiveEvent() const;
+
+    void setId(int id);
+    void setName(std::string name);
+    void setDate(std::string date);
+    void setTime(std::string time);
+    void setLocation(std::string location);
+    void setDescription(std::string description);
+    void setMaxCapacity(int capacity);
+    void setPrice(double p);
+    void setCategory(std::string cat);
+    void activateEvent();
+    void deactivateEvent();
+
+    void updateEvent(std::string name, std::string date, std::string time, std::string location, std::string description);
+    void saveEvent(std::ofstream &file);
+
+    void addParticipant(Participant* p);
+    Participant* addParticipant(std::string name, std::string email, std::string contact);
+
+    Participant* getParticipant(int participantId) const;
+    const std::vector<Participant*>& getAllParticipants() const;
+    bool updateParticipant(int participantId, const std::string& newName, const std::string& newEmail, const std::string& newContact);
+    bool removeParticipant(int participantId);
+
+    double calculatePrice() const;
+    bool canRegister() const;
+    std::string toString() const;
+    void displayDetails() const;
 };
 
-#endif 
+#endif // EVENT_H

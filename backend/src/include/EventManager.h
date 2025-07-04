@@ -23,8 +23,8 @@ public:
     EventManager();
     ~EventManager();
 
-    json addEvent(const std::string& name, const std::string& date, 
-                  const std::string& time, const std::string& location, 
+    json addEvent(const std::string& name, const std::string& date,
+                  const std::string& time, const std::string& location,
                   const std::string& description);
 
     const Event& getEventById(int id) const;
@@ -32,20 +32,21 @@ public:
 
     const std::vector<Event*>& getAllEvents() const;
 
-    bool updateEvent(int id, const std::string& name, const std::string& date, 
-                     const std::string& time, const std::string& location, 
+    // Atualiza o método updateEvent para que a validação de data/hora no futuro seja opcional
+    bool updateEvent(int id, const std::string& name, const std::string& date,
+                     const std::string& time, const std::string& location,
                      const std::string& description);
 
     bool deleteEvent(int id);
 
-    json addParticipantToEvent(int eventId, const std::string& name, 
+    json addParticipantToEvent(int eventId, const std::string& name,
                                const std::string& email, const std::string& contact);
 
     json getParticipantsForEvent(int eventId) const;
 
-    bool updateParticipantInEvent(int eventId, int participantId, 
-                                  const std::string& newName, 
-                                  const std::string& newEmail, 
+    bool updateParticipantInEvent(int eventId, int participantId,
+                                  const std::string& newName,
+                                  const std::string& newEmail,
                                   const std::string& newContact);
 
     bool removeParticipantFromEvent(int eventId, int participantId);
