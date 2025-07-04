@@ -1,39 +1,24 @@
-/**
- * Componente EventoList - Gerencia a exibição da lista de eventos
- */
-class EventoList {
+class EventList {
     constructor() {
         this.eventos = [];
         this.init();
     }
 
-    /**
-     * Inicializa o componente
-     */
     init() {
         this.setupEventListeners();
     }
 
-    /**
-     * Configura os event listeners
-     */
     setupEventListeners() {
-        // Listener para atualização de eventos
         window.addEventListener('eventosUpdated', () => {
             this.carregarEventos();
         });
     }
 
-    /**
-     * Carrega os eventos da API
-     */
     async carregarEventos() {
         try {
             this.eventos = await ApiService.getEventos();
             this.renderizarTabela();
             this.atualizarSelectEventos();
-            
-            // Atualizar dashboard
             if (window.dashboard) {
                 window.dashboard.updateData(this.eventos);
             }
@@ -43,26 +28,15 @@ class EventoList {
         }
     }
 
-    /**
-     * Renderiza a lista de eventos (suporta tabela e cards)
-     * @param {Array} eventos - Lista de eventos
-     * @param {Object} options - Opções de renderização
-     */
     renderizarEventos(eventos, options = {}) {
         this.eventos = eventos || [];
-        
-        // Verificar se deve renderizar cards ou tabela
         if (options.modo === 'cards' || options.mostrarAcoes === false) {
             this.renderizarCards(eventos, options);
         } else {
-            // Simplificado para sempre renderizar a tabela na área de admin
             this.renderizarTabela(options);
         }
     }
 
-    /**
-     * Renderiza a tabela de eventos
-     */
     renderizarTabela() {
         const tbody = document.getElementById('eventosLista');
         if (!tbody) return;
@@ -80,16 +54,10 @@ class EventoList {
         });
     }
 
-    /**
-     * Cria uma linha da tabela para um evento
-     * @param {Object} evento - Dados do evento
-     * @returns {HTMLElement} Elemento TR
-     */
     criarLinhaEvento(evento) {
         const tr = document.createElement('tr');
         const statusClass = this.getStatusClass(evento.data);
         const eventoJson = JSON.stringify(evento).replace(/"/g, '&quot;');
-        
         tr.className = statusClass;
         tr.innerHTML = `
             <td>
@@ -116,15 +84,9 @@ class EventoList {
                 </div>
             </td>
         `;
-        
         return tr;
     }
 
-    /**
-     * Obtém a classe CSS baseada no status do evento
-     * @param {string} data - Data do evento
-     * @returns {string} Classe CSS
-     */
     getStatusClass(data) {
         if (DateUtils.isPast(data)) {
             return 'table-secondary';
@@ -134,11 +96,6 @@ class EventoList {
         return '';
     }
 
-    /**
-     * Obtém a classe do badge baseada no status do evento
-     * @param {string} data - Data do evento
-     * @returns {string} Classe do badge
-     */
     getStatusBadgeClass(data) {
         if (DateUtils.isPast(data)) {
             return 'bg-secondary';
@@ -150,11 +107,6 @@ class EventoList {
         return 'bg-primary';
     }
 
-    /**
-     * Obtém o texto do status do evento
-     * @param {string} data - Data do evento
-     * @returns {string} Texto do status
-     */
     getStatusText(data) {
         if (DateUtils.isPast(data)) {
             return 'Passado';
@@ -166,10 +118,6 @@ class EventoList {
         return 'Futuro';
     }
 
-    /**
-     * HTML para estado vazio (cards)
-     * @returns {string} HTML
-     */
     getEmptyCardsHTML() {
         return `
             <div class="col-12 text-center py-5">
@@ -180,10 +128,6 @@ class EventoList {
         `;
     }
 
-    /**
-     * HTML para estado vazio (tabela)
-     * @returns {string} HTML
-     */
     getEmptyStateHTML() {
         return `
             <tr>
@@ -197,15 +141,12 @@ class EventoList {
         `;
     }
 
-    /**
-     * Atualiza o select de eventos para o formulário de participantes
-     */
     atualizarSelectEventos() {
         const select = document.getElementById('eventoSelect');
         if (!select) return;
 
         select.innerHTML = '<option value="">Selecione um evento</option>';
-        
+
         this.eventos.forEach(evento => {
             const option = document.createElement('option');
             option.value = evento.id;
@@ -214,10 +155,6 @@ class EventoList {
         });
     }
 
-    /**
-     * Edita um evento
-     * @param {number} id - ID do evento
-     */
     async editarEvento(id) {
         try {
             const evento = this.eventos.find(e => e.id === id);
@@ -234,10 +171,6 @@ class EventoList {
         }
     }
 
-    /**
-     * Deleta um evento
-     * @param {number} id - ID do evento
-     */
     async deletarEvento(id) {
         const confirmed = await NotificationUtils.confirm('Tem certeza que deseja excluir este evento?');
         if (!confirmed) return;
@@ -252,10 +185,6 @@ class EventoList {
         }
     }
 
-    /**
-     * Ver detalhes de um evento
-     * @param {number} id - ID do evento
-     */
     async verDetalhes(id) {
         try {
             const evento = this.eventos.find(e => e.id === id);
@@ -272,11 +201,6 @@ class EventoList {
         }
     }
 
-    /**
-     * HTML para detalhes do evento
-     * @param {Object} evento - Dados do evento
-     * @returns {string} HTML
-     */
     getDetalhesHTML(evento) {
         return `
             <div class="row">
@@ -296,10 +220,6 @@ class EventoList {
         `;
     }
 
-    /**
-     * Ver participantes de um evento
-     * @param {number} eventoId - ID do evento
-     */
     async verParticipantes(eventoId) {
         try {
             const participantes = await ApiService.getParticipantes(eventoId);
@@ -312,11 +232,6 @@ class EventoList {
         }
     }
 
-    /**
-     * HTML para lista de participantes
-     * @param {Array} participantes - Lista de participantes
-     * @returns {string} HTML
-     */
     getParticipantesHTML(participantes) {
         if (participantes.length === 0) {
             return `
@@ -330,7 +245,7 @@ class EventoList {
 
         let html = '<div class="table-responsive"><table class="table table-hover">';
         html += '<thead><tr><th>Nome</th><th>Email</th><th>Contato</th></tr></thead><tbody>';
-        
+
         participantes.forEach(participante => {
             html += `
                 <tr>
@@ -340,14 +255,11 @@ class EventoList {
                 </tr>
             `;
         });
-        
+
         html += '</tbody></table></div>';
         return html;
     }
 
-    /**
-     * Salva os eventos
-     */
     async salvarEventos() {
         try {
             await ApiService.salvarEventos();
@@ -358,11 +270,6 @@ class EventoList {
         }
     }
 
-    /**
-     * Renderiza os eventos em formato de cards
-     * @param {Array} eventos - Lista de eventos
-     * @param {Object} options - Opções de renderização
-     */
     renderizarCards(eventos, options = {}) {
         const container = document.getElementById('eventosList');
         if (!container) return;
@@ -380,19 +287,13 @@ class EventoList {
         });
     }
 
-    /**
-     * Cria um card para um evento
-     * @param {Object} evento - Dados do evento
-     * @param {Object} options - Opções de renderização
-     * @returns {HTMLElement} Elemento do card
-     */
     criarCardEvento(evento, options = {}) {
         const col = document.createElement('div');
         col.className = 'col-md-6 col-lg-4 mb-4';
-        
+
         const statusClass = this.getStatusBadgeClass(evento.data);
         const statusText = this.getStatusText(evento.data);
-        
+
         col.innerHTML = `
             <div class="card h-100 shadow-sm">
                 <div class="card-header bg-light">
@@ -407,7 +308,7 @@ class EventoList {
                             ${evento.descricao || 'Sem descrição disponível'}
                         </p>
                     </div>
-                    
+
                     <div class="row text-center mb-3">
                         <div class="col-6">
                             <div class="border-end">
@@ -422,14 +323,14 @@ class EventoList {
                             <div class="fw-bold">${evento.hora || '--:--'}</div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <div class="d-flex align-items-center text-muted">
                             <i class="fas fa-map-marker-alt me-2"></i>
                             <span class="small">${evento.local}</span>
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted small">
                             <i class="fas fa-users me-1"></i>
@@ -444,12 +345,11 @@ class EventoList {
                 </div>
             </div>
         `;
-        
+
         return col;
     }
 }
 
-// Exportar componente
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = EventoList;
-} 
+    module.exports = EventList;
+}

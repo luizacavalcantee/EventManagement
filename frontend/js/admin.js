@@ -1,6 +1,3 @@
-/**
- * Script principal da página de administração
- */
 class AdminApp {
     constructor() {
         this.dashboard = new Dashboard();
@@ -9,36 +6,22 @@ class AdminApp {
         this.init();
     }
 
-    /**
-     * Inicializa a aplicação
-     */
     async init() {
         try {
-            // Carregar dados iniciais
             await this.carregarDados();
-            
-            // Configurar event listeners
             this.setupEventListeners();
-            
-            // Configurar data mínima
             this.setMinDate();
-            
         } catch (error) {
             console.error('Erro ao inicializar aplicação:', error);
             NotificationUtils.error('Erro ao carregar dados. Verifique se o servidor está rodando.');
         }
     }
 
-    /**
-     * Configura os event listeners
-     */
     setupEventListeners() {
-        // Event listener para atualização de eventos
         window.addEventListener('eventosUpdated', () => {
             this.carregarDados();
         });
 
-        // Event listener para cancelar edição
         const cancelBtn = document.getElementById('cancelBtn');
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
@@ -47,9 +30,6 @@ class AdminApp {
         }
     }
 
-    /**
-     * Define a data mínima como hoje
-     */
     setMinDate() {
         const dataInput = document.getElementById('data');
         if (dataInput) {
@@ -57,21 +37,15 @@ class AdminApp {
         }
     }
 
-    /**
-     * Carrega todos os dados necessários
-     */
     async carregarDados() {
         try {
-            // Carregar dashboard e eventos em paralelo
             const [relatorio, eventos] = await Promise.all([
                 ApiService.getRelatorio(),
                 ApiService.getEventos()
             ]);
 
-            // Atualizar dashboard
             this.dashboard.atualizarDashboard(relatorio);
 
-            // Atualizar lista de eventos
             this.eventoList.renderizarEventos(eventos, {
                 mostrarAcoes: true,
                 mostrarParticipantes: true,
@@ -86,18 +60,10 @@ class AdminApp {
         }
     }
 
-    /**
-     * Edita um evento
-     * @param {Object} evento - Dados do evento
-     */
     editarEvento(evento) {
         this.eventoForm.preencherParaEdicao(evento);
     }
 
-    /**
-     * Deleta um evento
-     * @param {Object} evento - Dados do evento
-     */
     async deletarEvento(evento) {
         if (confirm(`Tem certeza que deseja deletar o evento "${evento.nome}"?`)) {
             try {
@@ -111,33 +77,23 @@ class AdminApp {
         }
     }
 
-    /**
-     * Visualiza participantes de um evento
-     * @param {Object} evento - Dados do evento
-     */
     async verParticipantes(evento) {
         try {
             const participantes = await ApiService.getParticipantes(evento.id);
             this.renderizarParticipantes(evento, participantes);
-            
-            // Abrir modal
+
             const modal = new bootstrap.Modal(document.getElementById('participantesModal'));
             modal.show();
-            
+
         } catch (error) {
             console.error('Erro ao carregar participantes:', error);
             NotificationUtils.error('Erro ao carregar participantes. Tente novamente.');
         }
     }
 
-    /**
-     * Renderiza a lista de participantes no modal
-     * @param {Object} evento - Dados do evento
-     * @param {Array} participantes - Lista de participantes
-     */
     renderizarParticipantes(evento, participantes) {
         const container = document.getElementById('participantesList');
-        
+
         if (participantes.length === 0) {
             container.innerHTML = `
                 <div class="text-center py-4">
@@ -207,14 +163,12 @@ class AdminApp {
     }
 }
 
-// Função global para carregar eventos (usada no botão de atualizar)
 function carregarEventos() {
     if (window.adminApp) {
         window.adminApp.carregarDados();
     }
 }
 
-// Inicializar aplicação quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
     window.adminApp = new AdminApp();
-}); 
+});

@@ -1,24 +1,15 @@
-/**
- * Componente EventoForm - Gerencia o formulário de criação/edição de eventos
- */
-class EventoForm {
+class EventForm {
     constructor() {
         this.editandoEvento = false;
         this.eventoEditandoId = null;
         this.init();
     }
 
-    /**
-     * Inicializa o componente
-     */
     init() {
         this.setupEventListeners();
         this.setMinDate();
     }
 
-    /**
-     * Configura os event listeners
-     */
     setupEventListeners() {
         const form = document.getElementById('eventoForm');
         if (form) {
@@ -26,9 +17,6 @@ class EventoForm {
         }
     }
 
-    /**
-     * Define a data mínima como hoje
-     */
     setMinDate() {
         const dataInput = document.getElementById('data');
         if (dataInput) {
@@ -36,10 +24,6 @@ class EventoForm {
         }
     }
 
-    /**
-     * Manipula o envio do formulário
-     * @param {Event} e - Evento de submit
-     */
     async handleSubmit(e) {
         e.preventDefault();
         
@@ -49,7 +33,6 @@ class EventoForm {
             return;
         }
 
-        // Confirmar se deseja salvar o evento
         const confirmarSalvamento = await NotificationUtils.confirm(
             `Deseja ${this.editandoEvento ? 'atualizar' : 'cadastrar'} o evento "${evento.nome}"?`
         );
@@ -67,16 +50,13 @@ class EventoForm {
                 NotificationUtils.success('Evento cadastrado com sucesso!');
             }
             
-            // Mostrar popup de confirmação
             const confirmacao = await NotificationUtils.confirm(
                 'Evento salvo com sucesso! Deseja atualizar a página para ver as mudanças?'
             );
             
             if (confirmacao) {
-                // Atualizar a página
                 window.location.reload();
             } else {
-                // Limpar formulário e disparar evento para atualizar a lista
                 this.limparFormulario();
                 window.dispatchEvent(new CustomEvent('eventosUpdated'));
             }
@@ -87,10 +67,6 @@ class EventoForm {
         }
     }
 
-    /**
-     * Obtém os dados do formulário
-     * @returns {Object} Dados do evento
-     */
     getFormData() {
         return {
             nome: document.getElementById('nome').value.trim(),
@@ -101,11 +77,6 @@ class EventoForm {
         };
     }
 
-    /**
-     * Valida os dados do formulário
-     * @param {Object} evento - Dados do evento
-     * @returns {boolean} True se válido
-     */
     validateForm(evento) {
         if (!evento.nome) {
             NotificationUtils.warning('Por favor, informe o nome do evento.');
@@ -122,7 +93,6 @@ class EventoForm {
             return false;
         }
 
-        // Validar se a data não é passada
         if (DateUtils.isPast(evento.data)) {
             NotificationUtils.warning('A data do evento não pode ser no passado.');
             return false;
@@ -131,10 +101,6 @@ class EventoForm {
         return true;
     }
 
-    /**
-     * Preenche o formulário para edição
-     * @param {Object} evento - Dados do evento
-     */
     preencherParaEdicao(evento) {
         document.getElementById('nome').value = evento.nome;
         document.getElementById('data').value = evento.data;
@@ -147,13 +113,9 @@ class EventoForm {
         
         this.updateFormUI();
         
-        // Scroll para o formulário
         document.getElementById('eventoForm').scrollIntoView({ behavior: 'smooth' });
     }
 
-    /**
-     * Atualiza a interface do formulário
-     */
     updateFormUI() {
         const formTitle = document.getElementById('formTitle');
         const submitBtn = document.getElementById('submitBtn');
@@ -170,9 +132,6 @@ class EventoForm {
         }
     }
 
-    /**
-     * Limpa o formulário
-     */
     limparFormulario() {
         document.getElementById('eventoForm').reset();
         this.editandoEvento = false;
@@ -180,17 +139,10 @@ class EventoForm {
         this.updateFormUI();
     }
 
-    /**
-     * Cancela a edição
-     */
     cancelarEdicao() {
         this.limparFormulario();
     }
 
-    /**
-     * Obtém o estado atual do formulário
-     * @returns {Object} Estado do formulário
-     */
     getState() {
         return {
             editandoEvento: this.editandoEvento,
@@ -199,7 +151,6 @@ class EventoForm {
     }
 }
 
-// Exportar componente
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = EventoForm;
+    module.exports = EventForm;
 } 

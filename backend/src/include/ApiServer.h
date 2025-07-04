@@ -5,34 +5,23 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <sstream> // For stringstream
-#include <cstring> // For c-string manipulation if needed
-
-// Windows specific socket headers
+#include <sstream>
+#include <cstring>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-
-// Link with ws2_32.lib (usually handled by compiler/linker flags or IDE settings)
-// #pragma comment(lib, "ws2_32.lib") // This line might be needed in .cpp or build system
-
-#include "EventManager.h" // Include the EventManager header
+#include "EventManager.h"
 
 class ApiServer {
 private:
     SOCKET serverSocket;
-    EventManager& eventManager; // Reference to the event manager
+    EventManager& eventManager;
 
-    // Helper methods for HTTP request parsing and response sending
     std::string getRequestPath(const std::string& request);
     std::string parseJsonField(const std::string& json, const std::string& field);
     std::string urlDecode(const std::string& str);
-    
-    // Method to send HTTP responses
     void sendResponse(SOCKET clientSocket, const std::string& status, 
                       const std::string& contentType, const std::string& content, 
                       const std::string& extraHeaders = "");
-
-    // Handler methods for specific API routes
     void handleGetEvents(SOCKET clientSocket);
     void handlePostEvent(SOCKET clientSocket, const std::string& requestBody);
     void handleGetDashboardStats(SOCKET clientSocket);
@@ -45,13 +34,8 @@ private:
     void handleGetEventById(SOCKET clientSocket, int eventId);
 
 public:
-    // Constructor: Takes a reference to the EventManager
     ApiServer(EventManager& manager);
-    
-    // Destructor: Cleans up socket resources
     ~ApiServer();
-
-    // Starts the HTTP server loop on a given port
     void start(int port);
 };
 
