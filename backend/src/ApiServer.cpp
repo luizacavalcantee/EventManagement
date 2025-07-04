@@ -2,9 +2,12 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <algorithm> // For std::remove_if
+#include <algorithm> // For std::min, std::remove_if
 #include <iomanip>   // For std::put_time, etc.
 #include <regex>     // For more robust path parsing if needed, but sticking to find/substr for now.
+
+// Ensure nlohmann/json.hpp is correctly placed in backend/src/include/json/
+#include "json/json.hpp" 
 
 // Link with ws2_32.lib for Windows Sockets
 #pragma comment(lib, "ws2_32.lib")
@@ -19,25 +22,6 @@ std::string ApiServer::getRequestPath(const std::string& request) {
         return "";
     }
     return request.substr(startPos, endPos - startPos);
-}
-
-// Parses a specific string field from a simple JSON string
-std::string ApiServer::parseJsonField(const std::string& json, const std::string& field) {
-    std::string search_str = "\"" + field + "\":\"";
-    size_t pos = json.find(search_str);
-    if (pos == std::string::npos) {
-        // Handle numeric fields (e.g., "id":123) if necessary
-        search_str = "\"" + field + "\":";
-        pos = json.find(search_str);
-        if (pos == std::string::npos) return ""; // Field not found
-        pos += search_str.length();
-        size_t end = json.find_first_of(",}", pos); // Find comma or closing brace
-        return json.substr(pos, end - pos);
-    }
-    pos += search_str.length();
-    size_t end = json.find("\"", pos);
-    if (end == std::string::npos) return "";
-    return json.substr(pos, end - pos);
 }
 
 // Decodes URL-encoded strings
@@ -96,21 +80,24 @@ void ApiServer::handleGetEvents(SOCKET clientSocket) {
 }
 
 void ApiServer::handlePostEvent(SOCKET clientSocket, const std::string& requestBody) {
-    std::string name = parseJsonField(requestBody, "nome");
-    std::string date = parseJsonField(requestBody, "data");
-    std::string time = parseJsonField(requestBody, "hora");
-    std::string location = parseJsonField(requestBody, "local");
-    std::string description = parseJsonField(requestBody, "descricao");
-
-    if (name.empty() || date.empty() || time.empty() || location.empty() || description.empty()) {
-        sendResponse(clientSocket, "400 Bad Request", "application/json", 
-                     "{\"error\":\"Missing required fields for event.\"}", "");
-        return;
-    }
-
     try {
+        json requestJson = json::parse(requestBody);
+
+        // Use .at() for required fields to throw exception if not found
+        std::string name = requestJson.at("nome").get<std::string>();
+        std::string date = requestJson.at("data").get<std::string>();
+        std::string time = requestJson.at("hora").get<std::string>();
+        std::string location = requestJson.at("local").get<std::string>();
+        std::string description = requestJson.at("descricao").get<std::string>();
+
         json createdEvent = eventManager.addEvent(name, date, time, location, description);
         sendResponse(clientSocket, "201 Created", "application/json", createdEvent.dump());
+    } catch (const json::parse_error& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Invalid JSON format: " + std::string(e.what()) + "\"}", "");
+    } catch (const json::out_of_range& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Missing required JSON field: " + std::string(e.what()) + "\"}", "");
     } catch (const std::runtime_error& e) {
         sendResponse(clientSocket, "500 Internal Server Error", "application/json", 
                      "{\"error\":\"" + std::string(e.what()) + "\"}", "");
@@ -123,19 +110,22 @@ void ApiServer::handleGetDashboardStats(SOCKET clientSocket) {
 }
 
 void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const std::string& requestBody) {
-    std::string name = parseJsonField(requestBody, "nome");
-    std::string email = parseJsonField(requestBody, "email");
-    std::string contact = parseJsonField(requestBody, "contato");
-
-    if (name.empty() || email.empty()) {
-        sendResponse(clientSocket, "400 Bad Request", "application/json", 
-                     "{\"error\":\"Nome and email are required for participant.\"}", "");
-        return;
-    }
-
     try {
+        json requestJson = json::parse(requestBody);
+
+        std::string name = requestJson.at("nome").get<std::string>();
+        std::string email = requestJson.at("email").get<std::string>();
+        // Use .value() for optional fields with a default value
+        std::string contact = requestJson.value("contato", ""); 
+
         json createdParticipant = eventManager.addParticipantToEvent(eventId, name, email, contact);
         sendResponse(clientSocket, "201 Created", "application/json", createdParticipant.dump());
+    } catch (const json::parse_error& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Invalid JSON format: " + std::string(e.what()) + "\"}", "");
+    } catch (const json::out_of_range& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Missing required JSON field: " + std::string(e.what()) + "\"}", "");
     } catch (const std::runtime_error& e) {
         sendResponse(clientSocket, "404 Not Found", "application/json", 
                      "{\"error\":\"" + std::string(e.what()) + "\"}", "");
@@ -153,19 +143,15 @@ void ApiServer::handleGetParticipants(SOCKET clientSocket, int eventId) {
 }
 
 void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::string& requestBody) {
-    std::string name = parseJsonField(requestBody, "nome");
-    std::string data = parseJsonField(requestBody, "data");
-    std::string hora = parseJsonField(requestBody, "hora");
-    std::string local = parseJsonField(requestBody, "local");
-    std::string descricao = parseJsonField(requestBody, "descricao");
-
-    if (name.empty() || data.empty() || hora.empty() || local.empty() || descricao.empty()) {
-        sendResponse(clientSocket, "400 Bad Request", "application/json", 
-                     "{\"error\":\"Missing required fields for event update.\"}", "");
-        return;
-    }
-
     try {
+        json requestJson = json::parse(requestBody);
+
+        std::string name = requestJson.at("nome").get<std::string>();
+        std::string data = requestJson.at("data").get<std::string>();
+        std::string hora = requestJson.at("hora").get<std::string>();
+        std::string local = requestJson.at("local").get<std::string>();
+        std::string descricao = requestJson.at("descricao").get<std::string>();
+
         bool updated = eventManager.updateEvent(eventId, name, data, hora, local, descricao);
         if (updated) {
             sendResponse(clientSocket, "200 OK", "application/json", 
@@ -174,7 +160,14 @@ void ApiServer::handlePutEvent(SOCKET clientSocket, int eventId, const std::stri
             sendResponse(clientSocket, "404 Not Found", "application/json", 
                          "{\"error\":\"Event not found.\"}", "");
         }
+    } catch (const json::parse_error& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Invalid JSON format: " + std::string(e.what()) + "\"}", "");
+    } catch (const json::out_of_range& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Missing required JSON field: " + std::string(e.what()) + "\"}", "");
     } catch (const std::runtime_error& e) {
+        // CORREÇÃO: Usar clientSocket em vez de clientClient
         sendResponse(clientSocket, "500 Internal Server Error", "application/json", 
                      "{\"error\":\"" + std::string(e.what()) + "\"}", "");
     }
@@ -197,17 +190,13 @@ void ApiServer::handleDeleteEvent(SOCKET clientSocket, int eventId) {
 }
 
 void ApiServer::handlePutParticipant(SOCKET clientSocket, int eventId, int participantId, const std::string& requestBody) {
-    std::string newName = parseJsonField(requestBody, "nome");
-    std::string newEmail = parseJsonField(requestBody, "email");
-    std::string newContact = parseJsonField(requestBody, "contato");
-
-    if (newName.empty() || newEmail.empty()) { // Contact can be empty
-        sendResponse(clientSocket, "400 Bad Request", "application/json", 
-                     "{\"error\":\"Nome and email are required for participant update.\"}", "");
-        return;
-    }
-
     try {
+        json requestJson = json::parse(requestBody);
+
+        std::string newName = requestJson.at("nome").get<std::string>();
+        std::string newEmail = requestJson.at("email").get<std::string>();
+        std::string newContact = requestJson.value("contato", ""); // Optional field
+
         bool updated = eventManager.updateParticipantInEvent(eventId, participantId, newName, newEmail, newContact);
         if (updated) {
             sendResponse(clientSocket, "200 OK", "application/json", 
@@ -216,6 +205,12 @@ void ApiServer::handlePutParticipant(SOCKET clientSocket, int eventId, int parti
             sendResponse(clientSocket, "404 Not Found", "application/json", 
                          "{\"error\":\"Event or Participant not found.\"}", "");
         }
+    } catch (const json::parse_error& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Invalid JSON format: " + std::string(e.what()) + "\"}", "");
+    } catch (const json::out_of_range& e) {
+        sendResponse(clientSocket, "400 Bad Request", "application/json", 
+                     "{\"error\":\"Missing required JSON field: " + std::string(e.what()) + "\"}", "");
     } catch (const std::runtime_error& e) {
         sendResponse(clientSocket, "500 Internal Server Error", "application/json", 
                      "{\"error\":\"" + std::string(e.what()) + "\"}", "");
@@ -297,7 +292,7 @@ void ApiServer::start(int port) {
     
     std::cout << "🚀 API Server started on port " << port << "..." << std::endl;
     std::cout << "📱 Frontend available at: http://localhost:" << port << "/frontend/" << std::endl;
-    std::cout << "🔧 To stop the server, press Ctrl+C" << std::endl;
+    std::cout << "🔧 To stop the server, pressione Ctrl+C" << std::endl;
     std::cout << "--------------------------------------------------" << std::endl;
     
     while (true) {
@@ -320,6 +315,26 @@ void ApiServer::start(int port) {
             std::string method = request.substr(0, request.find(" "));
             std::string path = getRequestPath(request);
             
+            // --- INÍCIO: DEBUG Adicional para o path ---
+            std::cerr << "DEBUG_PATH_INFO: Original path received: [" << path << "], Length: " << path.length() << std::endl;
+            // Verifique se há caracteres não imprimíveis no final (ex: \r ou \n)
+            for (size_t i = 0; i < path.length(); ++i) {
+                if (path[i] < 32 || path[i] > 126) { // Caracteres não imprimíveis
+                    std::cerr << "DEBUG_PATH_INFO: Non-printable char at index " << i << ": " << (int)path[i] << std::endl;
+                }
+            }
+            std::cerr << std::flush; // Garante que a saída seja impressa
+            // --- FIM: DEBUG Adicional para o path ---
+
+
+            // --- Limpar barra final do path se existir e não for a raiz ---
+            if (!path.empty() && path.back() == '/' && path.length() > 1) {
+                path.pop_back(); // Remove a última barra
+                std::cerr << "DEBUG_PATH_INFO: Path after trailing slash removal: [" << path << "], Length: " << path.length() << std::endl; // New debug
+                std::cerr << std::flush;
+            }
+            // --- FIM DO TRECHO DE LIMPEZA ---
+
             std::cout << "--> METHOD: [" << method << "]" << std::endl;
             std::cout << "--> PATH: [" << path << "]" << std::endl;
 
@@ -335,7 +350,6 @@ void ApiServer::start(int port) {
             try {
                 if (method == "OPTIONS") {
                     std::cout << "OPTIONS (CORS Preflight)" << std::endl;
-                    // For OPTIONS, we just send necessary headers, no content
                     sendResponse(clientSocket, "204 No Content", "text/plain", "");
                 }
                 else if (path == "/health") {
@@ -356,7 +370,6 @@ void ApiServer::start(int port) {
                 }
                 // --- Event Specific Routes (PUT/DELETE) ---
                 else if (path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") == std::string::npos) {
-                    // This covers /api/eventos/{id}
                     try {
                         size_t idStart = path.find("/api/eventos/") + 13;
                         int eventId = std::stoi(path.substr(idStart));
@@ -373,42 +386,80 @@ void ApiServer::start(int port) {
                     } catch (const std::invalid_argument& e) {
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Invalid Event ID format.\"}", "");
                     } catch (const std::out_of_range& e) {
+                        // CORREÇÃO: Usar clientSocket em vez de clientClient
                         sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Event ID out of range.\"}", "");
                     }
                 }
                 // --- Participant Specific Routes ---
                 else if (path.rfind("/api/eventos/", 0) == 0 && path.find("/participantes") != std::string::npos) {
-                    // Handles /api/eventos/{eventId}/participantes or /api/eventos/{eventId}/participantes/{participantId}
+                    std::cerr << "DEBUG_ROUTING: Entered participant route block." << std::endl;
+                    std::cerr << "DEBUG_ROUTING: Full path inside block: [" << path << "]" << std::endl;
+                    
                     size_t eventIdStart = path.find("/api/eventos/") + 13;
                     size_t eventIdEnd = path.find("/participantes", eventIdStart);
                     
-                    if (eventIdEnd == std::string::npos) { // Should not happen with correct path structure
+                    std::cerr << "DEBUG_PARSING: eventIdStart: " << eventIdStart << ", eventIdEnd: " << eventIdEnd << std::endl;
+                    std::cerr << "DEBUG_PARSING: Raw path substring for eventId: [" << path.substr(eventIdStart, eventIdEnd - eventIdStart) << "]" << std::endl;
+                    std::cerr << std::flush;
+
+                    if (eventIdEnd == std::string::npos) { 
+                         std::cerr << "DEBUG_ERROR_FLOW: eventIdEnd is npos unexpectedly. Should not happen with correct path." << std::endl;
                          sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Invalid participants route format.\"}", "");
                          closesocket(clientSocket);
                          continue;
                     }
 
+                    int eventId = 0; // Initialize outside try to be accessible later
                     try {
-                        int eventId = std::stoi(path.substr(eventIdStart, eventIdEnd - eventIdStart));
+                        eventId = std::stoi(path.substr(eventIdStart, eventIdEnd - eventIdStart)); 
                         
-                        // Check if there's a participant ID in the path
-                        size_t participantIdStart = path.find("/participantes/", eventIdEnd) + std::string("/participantes/").length();
-                        
-                        if (participantIdStart != std::string::npos && participantIdStart < path.length()) {
-                            // Route: /api/eventos/{eventId}/participantes/{participantId}
-                            int participantId = std::stoi(path.substr(participantIdStart));
-                            std::cout << "Route /api/eventos/" << eventId << "/participantes/" << participantId << " (Method: " << method << ")" << std::endl;
-                            
-                            if (method == "PUT") {
-                                handlePutParticipant(clientSocket, eventId, participantId, requestBody);
-                            } else if (method == "DELETE") {
-                                handleDeleteParticipant(clientSocket, eventId, participantId);
-                            } else {
-                                sendResponse(clientSocket, "405 Method Not Allowed", "application/json", "{\"error\":\"Method not allowed for this participant route.\"}", "Allow: PUT, DELETE, OPTIONS\r\n");
-                            }
+                        std::cerr << "DEBUG_PARSING: Parsed eventId: " << eventId << std::endl;
+                        std::cerr << std::flush;
 
+                        // Find the position of "/participantes" (without trailing slash)
+                        size_t participants_segment_pos = path.find("/participantes", eventIdEnd); 
+                        
+                        // Check if there's a specific participant ID after "/participantes/"
+                        // This looks for the *next* slash after the "/participantes" segment
+                        size_t specific_participant_id_start_pos = path.find("/", participants_segment_pos + std::string("/participantes").length());
+                        
+                        std::cerr << "DEBUG_PARSING: participants_segment_pos: " << participants_segment_pos << std::endl;
+                        std::cerr << "DEBUG_PARSING: specific_participant_id_start_pos (after /participantes/): " << specific_participant_id_start_pos << std::endl;
+                        std::cerr << std::flush;
+
+                        // This condition identifies if a specific participant ID is in the URL
+                        // i.e., /api/eventos/{eventId}/participantes/{participantId}
+                        if (specific_participant_id_start_pos != std::string::npos && 
+                            specific_participant_id_start_pos < path.length() -1 ) { // -1 to ensure there's something after the slash for the ID
+                            
+                            try {
+                                int participantId = std::stoi(path.substr(specific_participant_id_start_pos + 1)); // +1 to skip the slash
+                                std::cerr << "DEBUG_PARSING: Parsed specific participantId: " << participantId << std::endl;
+                                std::cerr << std::flush;
+                                
+                                std::cout << "Route /api/eventos/" << eventId << "/participantes/" << participantId << " (Method: " << method << ")" << std::endl;
+                                
+                                if (method == "PUT") {
+                                    handlePutParticipant(clientSocket, eventId, participantId, requestBody);
+                                } else if (method == "DELETE") {
+                                    handleDeleteParticipant(clientSocket, eventId, participantId);
+                                } else {
+                                    sendResponse(clientSocket, "405 Method Not Allowed", "application/json", "{\"error\":\"Method not allowed for this participant route.\"}", "Allow: PUT, DELETE, OPTIONS\r\n");
+                                }
+                            } catch (const std::invalid_argument& e) {
+                                std::cerr << "ERROR_DETAIL: Invalid participant ID string: [" << path.substr(specific_participant_id_start_pos + 1) << "]" << std::endl;
+                                std::cerr << "ERROR_DETAIL: std::invalid_argument caught during participant ID parsing: " << e.what() << std::endl;
+                                std::cerr << std::flush;
+                                sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Invalid participant ID format in route.\"}", "");
+                            } catch (const std::out_of_range& e) {
+                                std::cerr << "ERROR_DETAIL: Out of range for participant ID: " << path.substr(specific_participant_id_start_pos + 1) << " - " << e.what() << std::endl;
+                                std::cerr << std::flush;
+                                sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Participant ID out of range.\"}", "");
+                            }
                         } else {
-                            // Route: /api/eventos/{eventId}/participantes
+                            // This branch is for /api/eventos/{eventId}/participantes (no specific participant ID)
+                            std::cerr << "DEBUG_PARSING: Conditional branch for general participants (no specific ID) entered. THIS IS EXPECTED." << std::endl;
+                            std::cerr << std::flush;
                             std::cout << "Route /api/eventos/" << eventId << "/participantes (Method: " << method << ")" << std::endl;
                             if (method == "POST") {
                                 handlePostParticipant(clientSocket, eventId, requestBody);
@@ -419,9 +470,13 @@ void ApiServer::start(int port) {
                             }
                         }
                     } catch (const std::invalid_argument& e) {
-                        sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Invalid ID format in participant route.\"}", "");
+                        std::cerr << "ERROR_DETAIL: std::invalid_argument caught during Event ID parsing in participant route: " << e.what() << std::endl;
+                        std::cerr << std::flush; 
+                        sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Invalid Event ID format in participant route.\"}", "");
                     } catch (const std::out_of_range& e) {
-                        sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"ID out of range in participant route.\"}", "");
+                        std::cerr << "ERROR_DETAIL: std::out_of_range caught during Event ID parsing in participant route: " << e.what() << std::endl;
+                        std::cerr << std::flush; 
+                        sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Event ID out of range.\"}", "");
                     }
                 }
                 // --- Static File Serving ---
@@ -430,10 +485,10 @@ void ApiServer::start(int port) {
                     std::string filePath = (path == "/") ? "frontend/index.html" : path.substr(1);
                     size_t queryPos = filePath.find("?");
                     if (queryPos != std::string::npos) {
-                        filePath = filePath.substr(0, queryPos); // Remove query parameters
+                        filePath = filePath.substr(0, queryPos); 
                     }
                     if (!filePath.empty() && filePath.back() == '/') {
-                        filePath += "index.html"; // Default to index.html for directory requests
+                        filePath += "index.html"; 
                     }
                     
                     std::ifstream file(filePath, std::ios::binary);
@@ -445,7 +500,7 @@ void ApiServer::start(int port) {
                         std::string contentType = "text/html";
                         if (filePath.find(".css") != std::string::npos) contentType = "text/css";
                         else if (filePath.find(".js") != std::string::npos) contentType = "application/javascript";
-                        else if (filePath.find(".png") != std::string::npos) contentType = "image/png"; // Example for images
+                        else if (filePath.find(".png") != std::string::npos) contentType = "image/png"; 
                         else if (filePath.find(".jpg") != std::string::npos || filePath.find(".jpeg") != std::string::npos) contentType = "image/jpeg";
                         else if (filePath.find(".ico") != std::string::npos) contentType = "image/x-icon";
 
@@ -453,7 +508,7 @@ void ApiServer::start(int port) {
                     } else {
                         std::cout << "File not found: " << filePath << std::endl;
                         sendResponse(clientSocket, "404 Not Found", "text/html", 
-                                     "<h1>404 Not Found</h1><p>The requested file '" + filePath + "' was not found.</p>");
+                                     "<h1>404 Not Found</h1><p>The requested file '" + filePath + "' wasd not found.</p>");
                     }
                 }
                 // --- 404 Not Found for API routes ---
