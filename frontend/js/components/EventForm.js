@@ -2,33 +2,45 @@ class EventForm {
     constructor() {
         this.editandoEvento = false;
         this.eventoEditandoId = null;
+        this.eventoOriginal = null;
         this.init();
     }
 
     init() {
         this.setupEventListeners();
-        this.setMinDate();
     }
 
     setupEventListeners() {
-        const form = document.getElementById('eventoForm');
+        const form = document.getElementById('eventForm');
         if (form) {
             form.addEventListener('submit', (e) => this.handleSubmit(e));
         }
+
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.cancelarEdicao();
+            });
+        }
+        this.limparFormulario();
     }
 
-    setMinDate() {
+    updateMinDateAttribute() {
         const dataInput = document.getElementById('data');
         if (dataInput) {
-            dataInput.min = DateUtils.getMinDate();
+            if (this.editandoEvento) {
+                dataInput.removeAttribute('min');
+            } else {
+                dataInput.min = DateUtils.getMinDate();
+            }
         }
     }
 
     async handleSubmit(e) {
         e.preventDefault();
-        
+
         const evento = this.getFormData();
-        
+
         if (!this.validateForm(evento)) {
             return;
         }
@@ -36,7 +48,7 @@ class EventForm {
         const confirmarSalvamento = await NotificationUtils.confirm(
             `Deseja ${this.editandoEvento ? 'atualizar' : 'cadastrar'} o evento "${evento.nome}"?`
         );
-        
+
         if (!confirmarSalvamento) {
             return;
         }
@@ -49,18 +61,18 @@ class EventForm {
                 await ApiService.createEvento(evento);
                 NotificationUtils.success('Evento cadastrado com sucesso!');
             }
-            
+
             const confirmacao = await NotificationUtils.confirm(
                 'Evento salvo com sucesso! Deseja atualizar a página para ver as mudanças?'
             );
-            
+
             if (confirmacao) {
                 window.location.reload();
             } else {
                 this.limparFormulario();
                 window.dispatchEvent(new CustomEvent('eventosUpdated'));
             }
-            
+
         } catch (error) {
             console.error('Erro ao salvar evento:', error);
             NotificationUtils.error('Erro ao salvar evento. Por favor, tente novamente.');
@@ -93,27 +105,43 @@ class EventForm {
             return false;
         }
 
-        if (DateUtils.isPast(evento.data)) {
-            NotificationUtils.warning('A data do evento não pode ser no passado.');
-            return false;
+        const dataDoFormularioObj = DateUtils.parseDate(evento.data);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (dataDoFormularioObj && dataDoFormularioObj.getTime() < today.getTime()) {
+            if (!this.editandoEvento) {
+                NotificationUtils.warning('A data de um novo evento não pode ser no passado.');
+                return false;
+            } else {
+                const dataOriginalObj = this.eventoOriginal ? DateUtils.parseDate(this.eventoOriginal.data) : null;
+
+                if (dataOriginalObj && dataOriginalObj.getTime() >= today.getTime()) {
+                    NotificationUtils.warning('Não é possível mover um evento futuro para uma data passada.');
+                    return false;
+                }
+            }
         }
 
         return true;
     }
 
     preencherParaEdicao(evento) {
+        this.eventoOriginal = { ...evento };
+
         document.getElementById('nome').value = evento.nome;
-        document.getElementById('data').value = evento.data;
+        document.getElementById('data').value = DateUtils.formatDateForInput(evento.data);
         document.getElementById('hora').value = evento.hora || '';
         document.getElementById('local').value = evento.local;
         document.getElementById('descricao').value = evento.descricao || '';
 
         this.editandoEvento = true;
         this.eventoEditandoId = evento.id;
-        
+
         this.updateFormUI();
-        
-        document.getElementById('eventoForm').scrollIntoView({ behavior: 'smooth' });
+        this.updateMinDateAttribute();
+
+        document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
     }
 
     updateFormUI() {
@@ -133,10 +161,12 @@ class EventForm {
     }
 
     limparFormulario() {
-        document.getElementById('eventoForm').reset();
+        document.getElementById('eventForm').reset();
         this.editandoEvento = false;
         this.eventoEditandoId = null;
+        this.eventoOriginal = null;
         this.updateFormUI();
+        this.updateMinDateAttribute();
     }
 
     cancelarEdicao() {
@@ -153,4 +183,4 @@ class EventForm {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = EventForm;
-} 
+}

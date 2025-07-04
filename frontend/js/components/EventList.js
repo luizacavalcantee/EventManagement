@@ -162,8 +162,8 @@ class EventList {
                 throw new Error('Evento não encontrado');
             }
 
-            if (window.eventoForm) {
-                window.eventoForm.preencherParaEdicao(evento);
+            if (window.eventForm) {
+                window.eventForm.preencherParaEdicao(evento);
             }
         } catch (error) {
             console.error('Erro ao carregar evento:', error);

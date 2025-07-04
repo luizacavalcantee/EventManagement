@@ -84,8 +84,8 @@ class ParticipantForm {
     getEventoSelecionado() {
         const eventoId = document.getElementById('eventoSelect').value;
         if (!eventoId) return null;
-        if (window.eventoList && window.eventoList.eventos) {
-            return window.eventoList.eventos.find(e => e.id == eventoId);
+        if (window.eventList && window.eventList.eventos) {
+            return window.eventList.eventos.find(e => e.id == eventoId);
         }
         return null;
     }

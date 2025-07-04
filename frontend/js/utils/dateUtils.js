@@ -3,9 +3,18 @@ class DateUtils {
         if (!dateString) return null;
         if (dateString.includes('/')) {
             const parts = dateString.split('/');
-            const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-            if (!isNaN(date.getTime())) return date;
+            if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+                const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                if (!isNaN(date.getTime())) return date;
+            }
         } 
+        if (dateString.includes('-')) {
+            const parts = dateString.split('-');
+            if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+                const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                if (!isNaN(date.getTime())) return date;
+            }
+        }
         const date = new Date(dateString);
         if (!isNaN(date.getTime())) return date;
         return null;
@@ -18,12 +27,12 @@ class DateUtils {
     }
 
     static formatDateForInput(dateString) {
-        if (!dateString) return '';
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-            return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-        return dateString;
+        const date = DateUtils.parseDate(dateString);
+        if (!date) return '';
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     static formatDateTime(dateString, timeString, locale = 'pt-BR') {
