@@ -1,246 +1,283 @@
-#include "GerenciadorEventos.h"
+#include "EventManager.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <chrono>
+#include <iomanip>
+#include "json/json.hpp"
 
-// Usando o alias para o nlohmann::json
-using json = nlohmann::json;
-
-// --- Construtor e Destrutor ---
-
-GerenciadorEventos::GerenciadorEventos() : nextId(1) {
-    // O vetor é inicializado vazio por padrão. Nenhuma ação necessária.
+std::string getCurrentDateFormatted() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    std::tm* p_tm = std::localtime(&now_c);
+    std::ostringstream ss;
+    ss << std::put_time(p_tm, "%d/%m/%Y");
+    return ss.str();
 }
 
-GerenciadorEventos::~GerenciadorEventos() {
-    // Itera sobre o vetor e deleta cada ponteiro para liberar a memória.
-    for (Evento* ev : eventos) {
+int compareDates(const std::string& date1_str, const std::string& date2_str) {
+    int d1 = std::stoi(date1_str.substr(0, 2));
+    int m1 = std::stoi(date1_str.substr(3, 2));
+    int y1 = std::stoi(date1_str.substr(6, 4));
+    int d2 = std::stoi(date2_str.substr(0, 2));
+    int m2 = std::stoi(date2_str.substr(3, 2));
+    int y2 = std::stoi(date2_str.substr(6, 4));
+    if (y1 != y2) return y1 - y2;
+    if (m1 != m2) return m1 - m2;
+    return d1 - d2;
+}
+
+EventManager::EventManager() : nextEventId(1) {
+    loadEventsFromFile();
+}
+
+EventManager::~EventManager() {
+    for (Event* ev : events) {
         delete ev;
     }
-    // O vetor em si é limpo automaticamente quando o objeto é destruído.
+    events.clear();
 }
 
-
-// --- Métodos para interação via Console ---
-
-void GerenciadorEventos::cadastrarEvento() {
-    std::string nome, data, hora, local, descricao;
-    std::cin.ignore();
-    std::cout << "\n=== Cadastro de Evento ===" << std::endl;
-    std::cout << "Nome do evento: "; std::getline(std::cin, nome);
-    std::cout << "Data: "; std::getline(std::cin, data);
-    std::cout << "Hora: "; std::getline(std::cin, hora);
-    std::cout << "Local: "; std::getline(std::cin, local);
-    std::cout << "Descricao: "; std::getline(std::cin, descricao);
-
-    // MUDANÇA: Usa push_back para adicionar o novo evento. Não há mais limite de 10.
-    eventos.push_back(new Evento(nextId++, nome, data, hora, local, descricao));
-    std::cout << "Evento cadastrado com sucesso!" << std::endl;
-}
-
-void GerenciadorEventos::inscreverParticipante() {
-    if (eventos.empty()) {
-        std::cout << "Sem eventos cadastrados!" << std::endl;
-        return;
-    }
-
-    std::string nomeEvento, nomeParticipante, email, contato;
-    std::cin.ignore();
-    std::cout << "\nNome do evento: "; std::getline(std::cin, nomeEvento);
-
-    for (auto& evento : eventos) {
-        if (evento->getNome() == nomeEvento) {
-            std::cout << "Nome do participante: "; std::getline(std::cin, nomeParticipante);
-            std::cout << "Email do participante: "; std::getline(std::cin, email);
-            std::cout << "Contato do participante: "; std::getline(std::cin, contato);
-            // Supondo que você tenha um método que cria e adiciona o participante
-            // evento->adicionarParticipante(new Participante(nomeParticipante, email, contato));
-            std::cout << "Participante inscrito com sucesso!" << std::endl;
-            return;
+Event* EventManager::findEventById(int id) {
+    for (Event* ev : events) {
+        if (ev->getId() == id) {
+            return ev;
         }
     }
-    std::cout << "Evento nao encontrado!" << std::endl;
+    return nullptr;
 }
 
-void GerenciadorEventos::atualizarEvento() {
-    std::string nomeAtual, novoNome, novaData, novaHora, novoLocal, novaDescricao;
-    std::cin.ignore();
-    std::cout << "\nNome do evento que deseja atualizar: "; std::getline(std::cin, nomeAtual);
-
-    for (auto& evento : eventos) {
-        if (evento->getNome() == nomeAtual) {
-            std::cout << "Novo nome: "; std::getline(std::cin, novoNome);
-            std::cout << "Nova data: "; std::getline(std::cin, novaData);
-            std::cout << "Nova hora: "; std::getline(std::cin, novaHora);
-            std::cout << "Novo local: "; std::getline(std::cin, novoLocal);
-            std::cout << "Nova descricao: "; std::getline(std::cin, novaDescricao);
-            evento->atualizarEvento(novoNome, novaData, novaHora, novoLocal, novaDescricao);
-            std::cout << "Evento atualizado com sucesso!" << std::endl;
-            return;
+const Event* EventManager::findEventById(int id) const {
+    for (const Event* ev : events) {
+        if (ev->getId() == id) {
+            return ev;
         }
     }
-    std::cout << "Evento nao encontrado!" << std::endl;
+    return nullptr;
 }
 
-// CORREÇÃO CRÍTICA: Versão de console para deletar evento
-void GerenciadorEventos::deletarEvento() {
-    if (eventos.empty()) {
-        std::cout << "Nao ha eventos para deletar!" << std::endl;
-        return;
-    }
-    std::string nomeEvento;
-    std::cin.ignore();
-    std::cout << "\nNome do evento que deseja deletar: "; std::getline(std::cin, nomeEvento);
+json EventManager::addEvent(const std::string& name, const std::string& date,
+                            const std::string& time, const std::string& location,
+                            const std::string& description) {
+    Event* newEvent = new Event(nextEventId, name, date, time, location, description);
+    events.push_back(newEvent);
+    nextEventId++;
+    saveEventsToFile();
+    json eventJson;
+    eventJson["id"] = newEvent->getId();
+    eventJson["nome"] = newEvent->getName();
+    eventJson["data"] = newEvent->getDate();
+    eventJson["hora"] = newEvent->getTime();
+    eventJson["local"] = newEvent->getLocation();
+    eventJson["descricao"] = newEvent->getDescription();
+    eventJson["numParticipantes"] = newEvent->getNumParticipants();
+    return eventJson;
+}
 
-    for (auto it = eventos.begin(); it != eventos.end(); ++it) {
-        if ((*it)->getNome() == nomeEvento) {
-            delete *it; // 1. Libera a memória do objeto Evento
-            eventos.erase(it); // 2. Remove o ponteiro do vetor de forma segura
-            std::cout << "Evento deletado com sucesso!" << std::endl;
-            salvarEventosEmArquivo();
-            return; // Sai da função
+const Event& EventManager::getEventById(int id) const {
+    const Event* event = findEventById(id);
+    if (!event) {
+        throw std::runtime_error("Event with ID " + std::to_string(id) + " not found.");
+    }
+    return *event;
+}
+
+Event& EventManager::getEventById(int id) {
+    Event* event = findEventById(id);
+    if (!event) {
+        throw std::runtime_error("Event with ID " + std::to_string(id) + " not found.");
+    }
+    return *event;
+}
+
+const std::vector<Event*>& EventManager::getAllEvents() const {
+    return events;
+}
+
+bool EventManager::updateEvent(int id, const std::string& name, const std::string& date,
+                               const std::string& time, const std::string& location,
+                               const std::string& description) {
+    Event* eventToUpdate = findEventById(id);
+    if (eventToUpdate) {
+        eventToUpdate->updateEvent(name, date, time, location, description);
+        saveEventsToFile();
+        return true;
+    }
+    return false;
+}
+
+bool EventManager::deleteEvent(int id) {
+    auto it = std::remove_if(events.begin(), events.end(),
+                             [id](Event* ev) { return ev->getId() == id; });
+    if (it != events.end()) {
+        delete *it;
+        events.erase(it, events.end());
+        saveEventsToFile();
+        return true;
+    }
+    return false;
+}
+
+json EventManager::addParticipantToEvent(int eventId, const std::string& name,
+                                          const std::string& email, const std::string& contact) {
+    Event* event = findEventById(eventId);
+    if (event) {
+        Participant* newParticipant = event->addParticipant(name, email, contact);
+        saveEventsToFile();
+        json participantJson;
+        participantJson["id"] = newParticipant->getId();
+        participantJson["nome"] = newParticipant->getName();
+        participantJson["email"] = newParticipant->getEmail();
+        participantJson["contato"] = newParticipant->getContact();
+        return participantJson;
+    }
+    throw std::runtime_error("Event with ID " + std::to_string(eventId) + " not found to add participant.");
+}
+
+json EventManager::getParticipantsForEvent(int eventId) const {
+    const Event* event = findEventById(eventId);
+    if (event) {
+        json participantsArray = json::array();
+        for (const auto& p : event->getAllParticipants()) {
+            json pJson;
+            pJson["id"] = p->getId();
+            pJson["nome"] = p->getName();
+            pJson["email"] = p->getEmail();
+            pJson["contato"] = p->getContact();
+            participantsArray.push_back(pJson);
         }
+        return participantsArray;
     }
-    std::cout << "Evento nao encontrado!" << std::endl;
+    throw std::runtime_error("Event with ID " + std::to_string(eventId) + " not found to list participants.");
 }
 
-void GerenciadorEventos::listarEventos() {
-    if (eventos.empty()) {
-        std::cout << "Nao ha eventos cadastrados!" << std::endl;
+bool EventManager::updateParticipantInEvent(int eventId, int participantId,
+                                            const std::string& newName,
+                                            const std::string& newEmail,
+                                            const std::string& newContact) {
+    Event* event = findEventById(eventId);
+    if (event) {
+        bool updated = event->updateParticipant(participantId, newName, newEmail, newContact);
+        if (updated) {
+            saveEventsToFile();
+        }
+        return updated;
+    }
+    return false;
+}
+
+bool EventManager::removeParticipantFromEvent(int eventId, int participantId) {
+    Event* event = findEventById(eventId);
+    if (event) {
+        bool removed = event->removeParticipant(participantId);
+        if (removed) {
+            saveEventsToFile();
+        }
+        return removed;
+    }
+    return false;
+}
+
+void EventManager::saveEventsToFile() {
+    std::ofstream file("eventos.txt");
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open eventos.txt for writing." << std::endl;
         return;
     }
-
-    std::cout << "\n=== Lista de Eventos ===" << std::endl;
-    for (const auto& evento : eventos) {
-        std::cout << "------------------------" << std::endl;
-        evento->exibirDetalhes(); // Usando o método de exibição do próprio evento
+    for (const auto& event : events) {
+        event->saveEvent(file);
     }
+    file.close();
 }
 
-void GerenciadorEventos::salvarEventosEmArquivo() {
-    std::ofstream arquivo("eventos.txt");
-    for (const auto& evento : eventos) {
-        evento->salvarEvento(arquivo);
-    }
-    arquivo.close();
-    std::cout << "Eventos salvos no arquivo com sucesso!" << std::endl;
-}
-
-void GerenciadorEventos::carregarEventosDoArquivo() {
-    std::ifstream arquivo("eventos.txt");
-    if (!arquivo.is_open()) {
-        // Não é um erro, apenas pode não existir arquivo ainda.
-        // std::cout << "Nenhum arquivo de eventos encontrado." << std::endl;
+void EventManager::loadEventsFromFile() {
+    std::ifstream file("eventos.txt");
+    if (!file.is_open()) {
         return;
     }
-
-    std::string linha;
-    while (std::getline(arquivo, linha)) {
-        std::stringstream ss(linha);
-        int id;
-        std::string idStr, nome, data, hora, local, descricao;
-
-        std::getline(ss, idStr, ',');
-        std::getline(ss, nome, ',');
-        std::getline(ss, data, ',');
-        std::getline(ss, hora, ',');
-        std::getline(ss, local, ',');
-        std::getline(ss, descricao, ',');
-        
-        try {
-            id = std::stoi(idStr);
-            eventos.push_back(new Evento(id, nome, data, hora, local, descricao));
-            if (id >= nextId) {
-                nextId = id + 1;
+    for (Event* ev : events) {
+        delete ev;
+    }
+    events.clear();
+    nextEventId = 1;
+    std::string line;
+    Event* currentEvent = nullptr;
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string type;
+        std::getline(ss, type, ',');
+        if (type == "EVENT") {
+            int id;
+            std::string name, date, time, location, description;
+            int maxCapacity;
+            double price;
+            std::string category_str, isActive_str;
+            int nextParticipantId_from_file;
+            std::string id_str;
+            std::getline(ss, id_str, ','); id = std::stoi(id_str);
+            std::getline(ss, name, ',');
+            std::getline(ss, date, ',');
+            std::getline(ss, time, ',');
+            std::getline(ss, location, ',');
+            std::getline(ss, description, ',');
+            std::string maxCap_str, price_str;
+            std::getline(ss, maxCap_str, ','); maxCapacity = std::stoi(maxCap_str);
+            std::getline(ss, price_str, ','); price = std::stod(price_str);
+            std::getline(ss, category_str, ',');
+            std::getline(ss, isActive_str, ','); bool isActive_val = (isActive_str == "true");
+            std::string nextPartId_str;
+            std::getline(ss, nextPartId_str, ','); nextParticipantId_from_file = std::stoi(nextPartId_str);
+            currentEvent = new Event(id, name, date, time, location, description);
+            currentEvent->setMaxCapacity(maxCapacity);
+            currentEvent->setPrice(price);
+            currentEvent->setCategory(category_str);
+            if (!isActive_val) currentEvent->deactivateEvent();
+            currentEvent->setId(id);
+            events.push_back(currentEvent);
+            if (id >= nextEventId) {
+                nextEventId = id + 1;
             }
-        } catch (const std::invalid_argument& e) {
-            std::cerr << "Erro ao ler ID do arquivo: " << e.what() << std::endl;
+        } else if (type == "PARTICIPANT") {
+            if (currentEvent) {
+                int p_id;
+                std::string p_name, p_email, p_contact;
+                std::string p_id_str;
+                std::getline(ss, p_id_str, ','); p_id = std::stoi(p_id_str);
+                std::getline(ss, p_name, ',');
+                std::getline(ss, p_email, ',');
+                std::getline(ss, p_contact, ',');
+                Participant* loadedParticipant = new Participant(p_id, p_name, p_email, p_contact);
+                currentEvent->addParticipant(loadedParticipant);
+            }
         }
     }
-    arquivo.close();
-    std::cout << "Eventos carregados com sucesso!" << std::endl;
+    file.close();
 }
 
-
-// --- Implementação dos Métodos da "API" ---
-
-void GerenciadorEventos::deletarEvento(int id) {
-    for (auto it = eventos.begin(); it != eventos.end(); ++it) {
-        if ((*it)->getId() == id) {
-            delete *it;
-            eventos.erase(it);
-            return;
+json EventManager::getDashboardStats() const {
+    json stats;
+    stats["totalEventos"] = events.size();
+    int totalParticipants = 0;
+    // CORREÇÃO: Use a função para obter a data atual
+    std::string todayDate = getCurrentDateFormatted(); 
+    int upcomingEvents = 0;
+    int eventsToday = 0;
+    for (const auto& event : events) {
+        totalParticipants += event->getNumParticipants();
+        // Certifique-se de que compareDates pode lidar com DD/MM/AAAA e DD-MM-AAAA
+        // Se o backend sempre salvar DD/MM/AAAA, o compareDates está ok.
+        // Se salvar DD-MM-AAAA, o compareDates precisará de ajustes ou o frontend 
+        // precisará converter antes de enviar.
+        int comparison = compareDates(event->getDate(), todayDate);
+        if (comparison == 0) {
+            eventsToday++;
+        } else if (comparison > 0) {
+            upcomingEvents++;
         }
     }
-    // Opcional: Lançar um erro se o evento não for encontrado
-    throw std::runtime_error("Evento com ID " + std::to_string(id) + " nao encontrado para delecao.");
-}
-
-Evento& GerenciadorEventos::getEventoPorId(int id) {
-    for (auto& evento : eventos) {
-        if (evento->getId() == id) {
-            return *evento; // Retorna uma referência ao evento encontrado
-        }
-    }
-    throw std::runtime_error("Evento com ID " + std::to_string(id) + " nao encontrado.");
-}
-
-// Versão const para ser usada em métodos const
-const Evento& GerenciadorEventos::getEventoPorId(int id) const {
-    for (const auto& evento : eventos) {
-        if (evento->getId() == id) {
-            return *evento;
-        }
-    }
-    throw std::runtime_error("Evento com ID " + std::to_string(id) + " nao encontrado.");
-}
-
-const std::vector<Evento*>& GerenciadorEventos::getEventos() const {
-    return eventos;
-}
-
-json GerenciadorEventos::gerarRelatorioJson() const {
-    json relatorio;
-    relatorio["totalEventos"] = eventos.size();
-
-    int totalParticipantes = 0;
-    for (const auto& evento : eventos) {
-        totalParticipantes += evento->getNumParticipantes();
-    }
-    relatorio["totalParticipantes"] = totalParticipantes;
-
-    // A lógica de contagem por status permanece a mesma,
-    // mas agora iterando sobre o vetor.
-    int eventosHoje = 0, eventosProximos = 0, eventosPassados = 0;
-    std::string hoje = "2025-07-02"; // Exemplo, idealmente pegar a data atual
-
-    for (const auto& evento : eventos) {
-        if (evento->getData() == hoje) eventosHoje++;
-        else if (evento->getData() > hoje) eventosProximos++;
-        else eventosPassados++;
-    }
-
-    relatorio["eventosPorStatus"] = {
-        {"hoje", eventosHoje},
-        {"proximos", eventosProximos},
-        {"passados", eventosPassados}
-    };
-    return relatorio;
-}
-
-// Funções não implementadas no seu .cpp original, adicionando implementações de exemplo
-void GerenciadorEventos::cadastrarEvento(const Evento& evento) {
-    // Cria uma cópia do evento no heap para ser gerenciado pela classe
-    eventos.push_back(new Evento(nextId++, evento.getNome(), evento.getData(), evento.getHora(), evento.getLocal(), evento.getDescricao()));
-}
-
-void GerenciadorEventos::atualizarEvento(int id, const Evento& evento) {
-    Evento& eventoParaAtualizar = getEventoPorId(id); // Reutiliza a função de busca
-    eventoParaAtualizar.atualizarEvento(evento.getNome(), evento.getData(), evento.getHora(), evento.getLocal(), evento.getDescricao());
-}
-
-// A função gerarRelatorio() de console não estava no seu .cpp, adicionei uma versão simples
-void GerenciadorEventos::gerarRelatorio() {
-    std::cout << "Relatorio em JSON:" << std::endl;
-    std::cout << gerarRelatorioJson().dump(4) << std::endl; // .dump(4) para formatar
+    stats["totalParticipantes"] = totalParticipants;
+    stats["eventosProximos"] = upcomingEvents;
+    stats["eventosHoje"] = eventsToday;
+    return stats;
 }

@@ -1,45 +1,59 @@
-#ifndef GERENCIADOR_EVENTOS_H
-#define GERENCIADOR_EVENTOS_H
+#ifndef EVENT_MANAGER_H
+#define EVENT_MANAGER_H
 
 #include <string>
 #include <vector>
-#include <stdexcept> // Para std::runtime_error
-#include "Evento.h"
-#include "nlohmann/json.hpp" // Incluído para a declaração da função
+#include <stdexcept>
+#include <memory>
+#include "json/json.hpp"
+#include "Event.h"
+#include "Participant.h"
 
-class GerenciadorEventos {
+using json = nlohmann::json;
+
+class EventManager {
 private:
-    // MUDANÇA: Substituímos o array C-style e o contador manual
-    // por um único std::vector, que é mais seguro e flexível.
-    std::vector<Evento*> eventos;
-    int nextId;
+    std::vector<Event*> events;
+    int nextEventId;
+
+    Event* findEventById(int id);
+    const Event* findEventById(int id) const;
 
 public:
-    GerenciadorEventos();
-    ~GerenciadorEventos();
+    EventManager();
+    ~EventManager();
 
-    // --- Métodos para interação via Console ---
-    void cadastrarEvento();
-    void inscreverParticipante();
-    void gerarRelatorio();
-    void atualizarEvento();
-    void deletarEvento();
-    void salvarEventosEmArquivo();
-    void carregarEventosDoArquivo();
-    void listarEventos();
+    json addEvent(const std::string& name, const std::string& date, 
+                  const std::string& time, const std::string& location, 
+                  const std::string& description);
 
-    // --- Métodos para uma possível API ou uso interno ---
-    void cadastrarEvento(const Evento& evento);
-    void atualizarEvento(int id, const Evento& evento);
-    void deletarEvento(int id);
-    const Evento& getEventoPorId(int id) const;
-    Evento& getEventoPorId(int id);
+    const Event& getEventById(int id) const;
+    Event& getEventById(int id);
 
-    // MUDANÇA: Retorna uma referência constante ao vetor de ponteiros.
-    // É mais eficiente e evita "slicing" (copiar objetos derivados como se fossem base).
-    const std::vector<Evento*>& getEventos() const;
+    const std::vector<Event*>& getAllEvents() const;
 
-    nlohmann::json gerarRelatorioJson() const;
+    bool updateEvent(int id, const std::string& name, const std::string& date, 
+                     const std::string& time, const std::string& location, 
+                     const std::string& description);
+
+    bool deleteEvent(int id);
+
+    json addParticipantToEvent(int eventId, const std::string& name, 
+                               const std::string& email, const std::string& contact);
+
+    json getParticipantsForEvent(int eventId) const;
+
+    bool updateParticipantInEvent(int eventId, int participantId, 
+                                  const std::string& newName, 
+                                  const std::string& newEmail, 
+                                  const std::string& newContact);
+
+    bool removeParticipantFromEvent(int eventId, int participantId);
+
+    void loadEventsFromFile();
+    void saveEventsToFile();
+
+    json getDashboardStats() const;
 };
 
-#endif // GERENCIADOR_EVENTOS_H
+#endif // EVENT_MANAGER_H
