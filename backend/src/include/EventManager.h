@@ -44,6 +44,8 @@ public:
 
     json getParticipantsForEvent(int eventId) const;
 
+    json getParticipantInEvent(int eventId, int participantId) const;
+
     bool updateParticipantInEvent(int eventId, int participantId,
                                   const std::string& newName,
                                   const std::string& newEmail,
