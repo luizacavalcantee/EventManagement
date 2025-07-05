@@ -93,7 +93,7 @@ EventManagement/
 cd EventManagement
 
 # Execute o script de compilação
-backend\compile_simple.bat
+run_backend.bat
 ```
 
 #### 2. **Execução do Servidor**
