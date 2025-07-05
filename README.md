@@ -34,7 +34,7 @@ Backend em C++ e frontend em JavaScript vanilla para gerenciamento de eventos.
 
 - **Backend**: C++ (Winsock)
 - **Frontend**: JavaScript vanilla
-- **Estilização**: Bootstrap 5
+- **Estilização**: CSS
 - **Banco**: Arquivo de texto (`eventos.txt`)
 
 ## Estrutura do Projeto
