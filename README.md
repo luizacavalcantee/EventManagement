@@ -1,171 +1,229 @@
-# Event Management System
+# 🎉 Sistema de Gerenciamento de Eventos
 
-Este é um sistema completo de gerenciamento de eventos, construído com um backend robusto em C++ puro e um frontend moderno e interativo em JavaScript vanilla e Bootstrap.
+Um sistema completo e robusto para gerenciamento de eventos, desenvolvido com **backend em C++ puro** e **frontend moderno em JavaScript vanilla**. Ideal para organizadores de eventos que buscam uma solução simples, eficiente e portável.
 
-## 📸 **Imagens do Projeto**
+## 📸 **Demonstração Visual**
 
-As imagens a seguir ilustram algumas telas do sistema:
+<div align="center">
+  <img src="assets/foto1.png" alt="Dashboard Principal" width="600"/>
+  <p><em>Dashboard principal com estatísticas em tempo real</em></p>
+  
+  <img src="assets/foto3.png" alt="Painel de Administração" width="600"/>
+  <p><em>Painel completo de administração de eventos</em></p>
+  
+  <img src="assets/foto5.png" alt="Inscrição de Participantes" width="600"/>
+  <p><em>Interface de inscrição para participantes</em></p>
+  
+  <img src="assets/foto2.png" alt="Gestão de Participantes" width="600"/>
+  <p><em>Visualização e gestão de participantes</em></p>
+  
+  <img src="assets/foto4.png" alt="Edição de Participantes" width="600"/>
+  <p><em>Modal para edição de dados de participantes</em></p>
+</div>
 
-<p align="center">
-    <img src="assets/foto1.png" alt="Dashboard" width="600"/>
-    <br>
-    <em>Dashboard do sistema</em>
-</p>
+## ✨ **Características Principais**
 
-<p align="center">
-    <img src="assets/foto3.png" alt="Administração de Eventos" width="600"/>
-    <br>
-    <em>Painel de administração de eventos</em>
-</p>
+### 🎯 **Funcionalidades do Sistema**
+- **Dashboard Intuitivo**: Estatísticas em tempo real e visão geral dos eventos
+- **Gestão Completa de Eventos**: Criar, editar, excluir e visualizar eventos
+- **Sistema de Inscrições**: Controle de participantes com validação de dados
+- **Interface Responsiva**: Design moderno e adaptável a diferentes dispositivos
+- **API RESTful**: Backend robusto com endpoints bem estruturados
+- **Persistência Local**: Armazenamento em arquivo de texto para simplicidade
 
-<p align="center">
-    <img src="assets/foto5.png" alt="Inscrição de Participante" width="600"/>
-    <br>
-    <em>Modal de inscrição para participantes</em>
-</p>
+### 🛠️ **Tecnologias Utilizadas**
 
-<p align="center">
-    <img src="assets/foto2.png" alt="Inscrição de Participante" width="600"/>
-    <br>
-    <em>Modal de participantes do evento</em>
-</p>
-
-<p align="center">
-    <img src="assets/foto4.png" alt="Inscrição de Participante" width="600"/>
-    <br>
-    <em>Modal editar participantes</em>
-</p>
-
-
-
-## 🚀 **Tecnologias**
-
-    - **Backend**: C++ puro com a biblioteca Winsock para networking no Windows.
-    - **Frontend**: JavaScript (ES6+), HTML5 e CSS3 com Bootstrap 5.
-    - **Arquitetura**: Servidor C++ servindo uma API RESTful e os arquivos estáticos do frontend.
-    - **Persistência de Dados**: Arquivo de texto local (`eventos.txt`) para simplicidade e portabilidade.
-
-## 📋 **Funcionalidades**
-
-### **Dashboard**
-
-    - 📊 Estatísticas em tempo real (total de eventos, inscritos, etc.).
-    - 📅 Visualização de eventos que ocorrem hoje e os próximos.
-
-### **Gerenciamento de Eventos**
-
-    - ➕ Criar novos eventos com validação de dados.
-    - ✏️ Editar informações de eventos existentes.
-    - 🗑️ Excluir eventos.
-    - 👁️ Visualizar detalhes completos de um evento.
-
-### **Gerenciamento de Participantes**
-
-    - 📝 Inscrever participantes em eventos específicos.
-    - ✏️ Editar dados de participantes inscritos.
-    - 🗑️ Remover participantes de um evento.
-    - 📋 Listar todos os participantes de um evento com controle de capacidade.
+| Componente | Tecnologia | Descrição |
+|------------|------------|-----------|
+| **Backend** | C++ puro | Servidor HTTP com Winsock para Windows |
+| **Frontend** | JavaScript ES6+ | Interface dinâmica e interativa |
+| **Estilização** | Bootstrap 5 + CSS3 | Design responsivo e moderno |
+| **API** | RESTful | Endpoints padronizados para comunicação |
+| **Persistência** | Arquivo de texto | Simples e portável (`eventos.txt`) |
 
 ## 📁 **Estrutura do Projeto**
 
 ```
 EventManagement/
-├── backend/
-│   ├── build/                # Arquivos de compilação (executável e objetos)
-│   │   └── backend.exe
-│   ├── src/                  # Código-fonte do backend
-│   │   ├── include/          # Arquivos de cabeçalho (.h)
-│   │   │   ├── ApiServer.h
-│   │   │   ├── EventManager.h
-│   │   │   ├── Event.h
-│   │   │   ├── Participant.h
-│   │   │   └── Person.h
-│   │   ├── ApiServer.cpp
-│   │   ├── EventManager.cpp
-│   │   ├── Event.cpp
-│   │   ├── Participant.cpp
-│   │   ├── Person.cpp
-│   │   └── main.cpp          # Ponto de entrada do programa
-│   └── eventos.txt           # Arquivo de persistência dos dados
-├── frontend/
-│   ├── admin.html            # Painel de administração de eventos
-│   ├── index.html            # Página de inscrição para participantes
-│   ├── css/
-│   │   └── styles.css
-│   └── js/
-│       ├── components/
-│       ├── services/
-│       │   └── apiService.js
-│       ├── utils/
-│       └── admin.js          # Lógica do painel de administração
-├── assets/
-│   ├── dashboard.png
-│   ├── admin_eventos.png
-│   └── inscricao_participante.png
-└── README.md                 # Este arquivo
+├── 📂 backend/
+│   ├── 📂 src/
+│   │   ├── 📂 include/           # Arquivos de cabeçalho
+│   │   │   ├── ApiServer.h       # Servidor HTTP
+│   │   │   ├── EventManager.h    # Gerenciador de eventos
+│   │   │   ├── Event.h           # Modelo de evento
+│   │   │   ├── Participant.h     # Modelo de participante
+│   │   │   └── Person.h          # Modelo de pessoa
+│   │   ├── ApiServer.cpp         # Implementação do servidor
+│   │   ├── EventManager.cpp      # Lógica de negócio
+│   │   ├── Event.cpp             # Operações de eventos
+│   │   ├── Participant.cpp       # Operações de participantes
+│   │   ├── Person.cpp            # Operações de pessoas
+│   │   └── main.cpp              # Ponto de entrada
+│   └── eventos.txt               # Banco de dados local
+├── 📂 frontend/
+│   ├── 📂 css/
+│   │   └── styles.css            # Estilos customizados
+│   ├── 📂 js/
+│   │   ├── 📂 components/        # Componentes reutilizáveis
+│   │   ├── 📂 services/          # Serviços de API
+│   │   ├── 📂 utils/             # Utilitários
+│   │   ├── admin.js              # Lógica administrativa
+│   │   ├── inscricoes.js         # Lógica de inscrições
+│   │   └── config.js             # Configurações
+│   ├── admin.html                # Painel administrativo
+│   └── index.html                # Página de inscrições
+├── 📂 assets/                    # Imagens e recursos
+├── run_backend.bat               # Script de execução
+└── README.md                     # Documentação
 ```
 
-## ⚙️ **Como Executar e Testar**
-
-Siga os passos abaixo para compilar e executar o projeto em um ambiente Windows.
+## 🚀 **Instalação e Execução**
 
 ### **Pré-requisitos**
+- ✅ **Windows 10/11** (sistema operacional suportado)
+- ✅ **MinGW-w64** ou **Visual Studio** com compilador C++
+- ✅ **Navegador web moderno** (Chrome, Firefox, Edge)
+- ✅ **Git** (opcional, para clonar o repositório)
 
-    - Um compilador C++, como o **MinGW (g++)**, instalado e configurado no `PATH` do sistema.
-    - Um navegador web moderno (Chrome, Firefox, Edge).
-    - (Opcional) **Visual Studio Code** com a extensão **Thunder Client** para testar a API.
+### **Passo a Passo**
 
-### **1. Compilando o Backend**
+#### 1. **Compilação do Backend**
+```bash
+# Navegue até a pasta do projeto
+cd EventManagement
 
-Para criar o executável do servidor, você pode usar o script de compilação fornecido.
+# Execute o script de compilação
+backend\compile_simple.bat
+```
 
-1.  Abra um terminal (CMD ou PowerShell).
+#### 2. **Execução do Servidor**
+```bash
+# Método 1: Duplo-clique no arquivo
+run_backend.bat
 
-2.  Navegue até a pasta raiz do projeto `EventManagement/`.
+# Método 2: Via terminal
+.\run_backend.bat
+```
 
-3.  Execute o script de compilação:
+#### 3. **Acesso ao Sistema**
+Após a execução, você verá a mensagem: `🚀 API Server started on port 8080...`
 
-        ```bash
-        backend\compile_simple.bat
-        ```
+Acesse no navegador:
+- **Administração**: http://localhost:8080/frontend/admin.html
+- **Inscrições**: http://localhost:8080/frontend/index.html
 
-        Isso executará o comando `g++` com todos os parâmetros necessários e criará o arquivo `backend.exe` dentro da pasta `backend/build/`.
+## 🔧 **API Endpoints**
 
-### **2. Executando o Servidor (Backend)**
+### **Eventos**
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/eventos` | Lista todos os eventos |
+| `POST` | `/api/eventos` | Cria um novo evento |
+| `PUT` | `/api/eventos/{id}` | Atualiza um evento |
+| `DELETE` | `/api/eventos/{id}` | Remove um evento |
+| `GET` | `/api/relatorio` | Obtém relatório geral |
 
-Com o backend compilado, para iniciar o servidor, basta usar o script principal.
+### **Participantes**
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/eventos/{id}/participantes` | Lista participantes de um evento |
+| `POST` | `/api/eventos/{id}/participantes` | Adiciona participante ao evento |
+| `PUT` | `/api/eventos/{id}/participantes/{participante_id}` | Atualiza dados do participante |
+| `DELETE` | `/api/eventos/{id}/participantes/{participante_id}` | Remove participante do evento |
 
-    * **Método Simples:**
+### **Exemplo de Uso da API**
 
-        1.  No Windows Explorer, navegue até a pasta raiz do seu projeto.
-        2.  Encontre o arquivo **`run_backend.bat`** e dê um **duplo-clique** nele.
+#### Criar um Evento
+```bash
+curl -X POST http://localhost:8080/api/eventos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nome": "Workshop de Programação",
+    "data": "15/12/2024",
+    "hora": "14:00",
+    "local": "Auditório Principal",
+    "descricao": "Workshop prático de C++ e JavaScript"
+  }'
+```
 
-    * **Método via Terminal:**
+#### Listar Eventos
+```bash
+curl http://localhost:8080/api/eventos
+```
 
-        1.  Abra um terminal na pasta raiz do projeto.
-        2.  Digite e execute:
-                ```bash
-                run_backend.bat
-                ```
+## 🎨 **Funcionalidades Detalhadas**
 
-Em ambos os casos, uma nova janela de terminal será aberta e, se tudo ocorrer bem, você verá a mensagem: `🚀 API Server started on port 8080...`. O servidor agora está rodando. **Não feche esta janela do terminal.**
+### **Dashboard Administrativo**
+- 📊 **Estatísticas em Tempo Real**: Total de eventos, participantes, eventos do dia
+- 📅 **Calendário Visual**: Eventos organizados por data
+- ⚡ **Ações Rápidas**: Criar, editar e excluir eventos com um clique
+- 🔍 **Busca e Filtros**: Encontrar eventos rapidamente
 
-### **3. Acessando a Interface (Frontend)**
+### **Gestão de Eventos**
+- ✅ **Validação Completa**: Verificação de dados obrigatórios
+- 📝 **Formulários Intuitivos**: Interface amigável para entrada de dados
+- 🗓️ **Controle de Datas**: Validação de datas e horários
+- 📍 **Informações Detalhadas**: Local, descrição e capacidade
 
-Com o servidor rodando, abra seu navegador e acesse as páginas:
+### **Sistema de Participantes**
+- 👥 **Controle de Capacidade**: Limite de participantes por evento
+- 📧 **Validação de Email**: Verificação de formato e duplicatas
+- 📱 **Dados de Contato**: Telefone e informações pessoais
+- ✏️ **Edição Flexível**: Modificar dados sem perder inscrição
 
-    - **Painel de Administração:** `http://localhost:8080/frontend/admin.html`
-    - **Página de Inscrição:** `http://localhost:8080/frontend/index.html`
+## 🧪 **Testando o Sistema**
 
-### **4. Testando as Rotas da API (com Thunder Client)**
+### **Com Thunder Client (VS Code)**
+1. Instale a extensão **Thunder Client** no VS Code
+2. Abra o painel lateral do Thunder Client
+3. Teste os endpoints listados acima
 
-Você pode usar o **Thunder Client** no VS Code para interagir diretamente com a API e verificar seu funcionamento.
+### **Cenários de Teste Recomendados**
+1. **Criar um evento** e verificar se aparece no dashboard
+2. **Inscrever participantes** e validar o controle de capacidade
+3. **Editar dados** de eventos e participantes
+4. **Excluir eventos** e verificar a limpeza dos dados
+5. **Testar validações** com dados inválidos
 
-| Funcionalidade | Método | URL | Corpo (JSON) de Exemplo |
-| :--- | :--- | :--- | :--- |
-| **Listar Eventos** | `GET` | `http://localhost:8080/api/eventos` | *(Nenhum)* |
-| **Obter Relatório**| `GET` | `http://localhost:8080/api/relatorio` | *(Nenhum)* |
-| **Criar Evento** | `POST`| `http://localhost:8080/api/eventos` | `{"nome":"Evento de Teste","data":"DD/MM/AAAA","hora":"HH:MM","local":"Online","descricao":"Descrição do evento"}` |
-| **Listar Participantes** |`GET` | `http://localhost:8080/api/eventos/1/participantes`| *(Nenhum)* |
-| **Editar Participante**|`PUT` | `http://localhost:8080/api/eventos/1/participantes/1`| `{"nome":"Novo Nome","email":"novo@email.com","contato":"(81) 99999-8888"}` |
-| **Deletar Evento** |`DELETE`|`http://localhost:8080/api/eventos/1` | *(Nenhum)* |
+## 🔍 **Troubleshooting**
+
+### **Problemas Comuns**
+
+| Problema | Solução |
+|----------|---------|
+| **Erro de compilação** | Verifique se o MinGW está no PATH |
+| **Porta 8080 ocupada** | Feche outros serviços ou altere a porta no código |
+| **Arquivo não encontrado** | Execute o script de compilação primeiro |
+| **Erro de conexão** | Verifique se o servidor está rodando |
+
+### **Logs e Debug**
+- O servidor exibe logs detalhados no terminal
+- Verifique o arquivo `eventos.txt` para dados persistentes
+- Use o console do navegador para debug do frontend
+
+## 🤝 **Contribuição**
+
+Este projeto está aberto para contribuições! Para contribuir:
+
+1. **Fork** o repositório
+2. Crie uma **branch** para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. **Commit** suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. **Push** para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um **Pull Request**
+
+## 📄 **Licença**
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 📞 **Suporte**
+
+- 📧 **Email**: [seu-email@exemplo.com]
+- 🐛 **Issues**: [Link para issues do GitHub]
+- 📖 **Documentação**: Este README
+
+---
+
+<div align="center">
+  <p><strong>Desenvolvido com ❤️ para facilitar a gestão de eventos</strong></p>
+  <p>⭐ Se este projeto te ajudou, considere dar uma estrela!</p>
+</div>
