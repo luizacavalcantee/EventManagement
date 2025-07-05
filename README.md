@@ -171,13 +171,6 @@ curl http://localhost:8080/api/eventos
 - 📱 **Dados de Contato**: Telefone e informações pessoais
 - ✏️ **Edição Flexível**: Modificar dados sem perder inscrição
 
-## 🧪 **Testando o Sistema**
-
-### **Com Thunder Client (VS Code)**
-1. Instale a extensão **Thunder Client** no VS Code
-2. Abra o painel lateral do Thunder Client
-3. Teste os endpoints listados acima
-
 ### **Cenários de Teste Recomendados**
 1. **Criar um evento** e verificar se aparece no dashboard
 2. **Inscrever participantes** e validar o controle de capacidade
@@ -201,27 +194,6 @@ curl http://localhost:8080/api/eventos
 - Verifique o arquivo `eventos.txt` para dados persistentes
 - Use o console do navegador para debug do frontend
 
-## 🤝 **Contribuição**
-
-Este projeto está aberto para contribuições! Para contribuir:
-
-1. **Fork** o repositório
-2. Crie uma **branch** para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. **Commit** suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
-4. **Push** para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um **Pull Request**
-
-## 📄 **Licença**
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 📞 **Suporte**
-
-- 📧 **Email**: [seu-email@exemplo.com]
-- 🐛 **Issues**: [Link para issues do GitHub]
-- 📖 **Documentação**: Este README
-
----
 
 <div align="center">
   <p><strong>Desenvolvido com ❤️ para facilitar a gestão de eventos</strong></p>
