@@ -167,6 +167,5 @@ O script compila o código C++ e inicia o servidor na porta 8080.
 ---
 
 <div align="center">
-  <p><strong>Desenvolvido com ❤️ para facilitar a gestão de eventos</strong></p>
-  <p>⭐ Se este projeto te ajudou, considere dar uma estrela!</p>
+  <p><strong>Desenvolvido com ❤️ pelos primos para facilitar a gestão de eventos</strong></p>
 </div>
