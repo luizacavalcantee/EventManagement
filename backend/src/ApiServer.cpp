@@ -179,10 +179,10 @@ void ApiServer::handlePostParticipant(SOCKET clientSocket, int eventId, const st
         std::string errorMessage = e.what();
         if (errorMessage.find("não encontrado") != std::string::npos) {
              sendResponse(clientSocket, "404 Not Found", "application/json",
-                     "{\"error\":\"" + errorMessage + "\"}", "");
+                        "{\"error\":\"" + errorMessage + "\"}", "");
         } else {
-            sendResponse(clientSocket, "400 Bad Request", "application/json",
-                     "{\"error\":\"Erro ao adicionar participante: " + errorMessage + "\"}", "");
+             sendResponse(clientSocket, "400 Bad Request", "application/json",
+                        "{\"error\":\"Erro ao adicionar participante: " + errorMessage + "\"}", "");
         }
     } catch (const std::exception& e) {
         std::cerr << "Erro inesperado em handlePostParticipant: " << e.what() << std::endl;
@@ -539,24 +539,23 @@ void ApiServer::start(int port) {
                         if (specific_participant_id_start_pos != std::string::npos &&
                             specific_participant_id_start_pos < path.length() -1 ) {
                             try {
-                               int participantId = std::stoi(path.substr(specific_participant_id_start_pos + 1));
-                               std::cout << "Route /api/eventos/" << eventId << "/participantes/" << participantId << " (";
-                               
-                               // Aqui são tratadas as rotas para participante específico
-                               if (method == "PUT") {
-                                   // ... código existente para PUT ...
-                               } else if (method == "DELETE") {
-                                   // ... código existente para DELETE ...
-                               
-                               // Bloco para GET de participante específico
-                               } else if (method == "GET") {
-                                   std::cout << "GET)" << std::endl;
-                                   handleGetParticipantById(clientSocket, eventId, participantId);
-                       
-                               } else {
-                                   std::cout << "INVALID METHOD)" << std::endl;
-                                   sendResponse(clientSocket, "405 Method Not Allowed", "application/json", "{\"error\":\"Método não permitido para esta rota de participante.\"}", "Allow: GET, PUT, DELETE, OPTIONS\r\n");
-                               }
+                                int participantId = std::stoi(path.substr(specific_participant_id_start_pos + 1));
+                                std::cout << "Route /api/eventos/" << eventId << "/participantes/" << participantId << " (";
+                                
+                                // Aqui são tratadas as rotas para participante específico
+                                if (method == "PUT") {
+                                    std::cout << "PUT)" << std::endl;
+                                    handlePutParticipant(clientSocket, eventId, participantId, requestBody);
+                                } else if (method == "DELETE") {
+                                    std::cout << "DELETE)" << std::endl;
+                                    handleDeleteParticipant(clientSocket, eventId, participantId);
+                                } else if (method == "GET") {
+                                    std::cout << "GET)" << std::endl;
+                                    handleGetParticipantById(clientSocket, eventId, participantId);
+                                } else {
+                                    std::cout << "INVALID METHOD)" << std::endl;
+                                    sendResponse(clientSocket, "405 Method Not Allowed", "application/json", "{\"error\":\"Método não permitido para esta rota de participante.\"}", "Allow: GET, PUT, DELETE, OPTIONS\r\n");
+                                }
                             } catch (const std::invalid_argument& e) {
                                 sendResponse(clientSocket, "400 Bad Request", "application/json", "{\"error\":\"Formato de ID de participante inválido na rota.\"}", "");
                             } catch (const std::out_of_range& e) {
@@ -596,9 +595,9 @@ void ApiServer::start(int port) {
                     }
                     // Protege contra path traversal
                     if (localFilePath.find("..") != std::string::npos) {
-                         sendResponse(clientSocket, "403 Forbidden", "text/html", "<h1>403 Forbidden</h1><p>Acesso negado.</p>");
-                         closesocket(clientSocket);
-                         continue;
+                        sendResponse(clientSocket, "403 Forbidden", "text/html", "<h1>403 Forbidden</h1><p>Acesso negado.</p>");
+                        closesocket(clientSocket);
+                        continue;
                     }
                     std::ifstream file(localFilePath, std::ios::binary);
                     if (file) {
