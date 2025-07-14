@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="elipse" id="elipse1"></div>
+    <div class="elipse" id="elipse2"></div>
+
+    <header>
+        <h2>Event Management System</h2>
+        <div id="autores">
+            <a href="https://github.com/luizacavalcantee" target="_blank">Luiza Cavalcante,</a>
+            <a href="https://github.com/claraolivcosta" target="_blank">Clara Oliveira Costa,</a>
+            <a href="https://github.com/amosantana" target="_blank">Amós Santana,</a>
+            <a href="https://github.com/saunayc" target="_blank">Saunay Coutinho</a>
+        </div>
+    </header>
+
+    <main>
+        <div id="heroBanner">
+            <div id="heroContent">
+                <h1>Gerenciamento de Eventos Simplificado com C++</h1>
+                <p>Uma solução de back-end completa para plataformas de eventos, permitindo criar, gerenciar e deletar eventos e participantes através de uma API RESTful robusta.</p>
+                <div id="heroBtns">
+                    <a href="https://github.com/luizacavalcantee/EventManagement" target="_blank"><button id="button1">Ver Código no GitHub</button></a>
+                    <a href="./assets/relatorio.pdf" target="_blank"><button id="button2">Ler Relatório</button></a>
+                </div>
+            </div>
+            <img src="assets/foto1.png" alt="Dashboard do Sistema de Eventos">
+        </div>
+
+        <div id="visaoGeral" class="section">
+            <h2>Visão Geral das Funcionalidades</h2>
+
+            <div class="container">
+                <img src="assets/foto3.png" alt="Painel de administração de eventos">
+                <div class="containerText">
+                    <h3>Gerenciamento Completo de Eventos</h3>
+                    <p>Crie, edite, visualize e delete eventos com total controle e validação de dados. O painel administrativo oferece uma visão clara de todos os eventos cadastrados, facilitando a gestão.</p>
+                </div>
+            </div>
+
+            <div class="container reverse">
+                <img src="assets/foto2.png" alt="Modal de participantes do evento">
+                <div class="containerText">
+                    <h3>Gestão de Participantes</h3>
+                    <p>Inscreva, edite, liste e remova participantes de eventos específicos. O sistema controla a capacidade máxima, garantindo que os eventos não fiquem superlotados e oferecendo uma experiência organizada.</p>
+                </div>
+            </div>
+
+            <div class="container">
+                <img src="assets/foto1.png" alt="Dashboard do sistema">
+                <div class="containerText">
+                    <h3>Dashboard com Estatísticas</h3>
+                    <p>Acesse um dashboard com estatísticas em tempo real, incluindo o número total de eventos, a quantidade de participantes inscritos, e uma visualização rápida de eventos futuros e que ocorrem no dia.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tecnologias" class="section">
+            <h2>Tecnologias e Arquitetura</h2>
+             <div class="containerText" style="width: 100%; max-width: 800px; text-align: center; gap: 24px;">
+                <p>O sistema foi construído com uma arquitetura de 3 camadas, utilizando C++ puro no backend para máxima performance. A comunicação é feita via API RESTful, com persistência de dados em um arquivo de texto local para simplicidade e portabilidade.</p>
+                <ul>
+                    <li><strong>Backend:</strong> C++ puro com a biblioteca Winsock para networking.</li>
+                    <li><strong>Frontend:</strong> JavaScript (ES6+), HTML5 e CSS3 com Bootstrap 5.</li>
+                    <li><strong>Princípios:</strong> Forte uso de Programação Orientada a Objetos (Herança, Encapsulamento, Polimorfismo).</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="video" class="section">
+            <h2>Vídeo de Apresentação</h2>
+            <iframe src="https://www.youtube.com" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+    </main>
+</body>
+</html>
